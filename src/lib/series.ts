@@ -48,7 +48,7 @@ export function smoothPath(seed: number, n: number, start: number, end: number, 
   for (let i = 0; i < n; i++) {
     const t = i / (n - 1);
     const drift = start + (end - start) * t;
-    const residual = cum[i] - cum[n - 1] * t; // zero at both ends
+    const residual = cum[i] - cum[0] - (cum[n - 1] - cum[0]) * t; // zero at both ends
     out.push(drift * (1 + residual));
   }
   return out;

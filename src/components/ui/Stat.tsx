@@ -27,12 +27,12 @@ export function Stat({ label, value, sub, tone = 'default', size = 'md', classNa
       onClick={onClick}
       className={cx(
         'flex flex-col gap-1 text-left min-w-0',
-        onClick && 'hover:bg-panel-2 -m-2 p-2 rounded transition-colors',
+        onClick && 'cursor-pointer group',
         className,
       )}
     >
       <div className="text-xs text-ink-3">{label}</div>
-      <div className={cx('display num font-semibold truncate', size === 'lg' ? 'text-3xl' : 'text-xl', tones[tone])}>{value}</div>
+      <div className={cx('display num font-semibold truncate', size === 'lg' ? 'text-3xl' : 'text-xl', tones[tone], onClick && 'group-hover:underline decoration-1 underline-offset-4')}>{value}</div>
       {sub && <div className="text-xs text-ink-2 num">{sub}</div>}
     </Tag>
   );

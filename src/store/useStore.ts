@@ -46,6 +46,16 @@ interface AppState {
 }
 
 const uid = () => Math.random().toString(36).slice(2, 10);
+
+/** In-memory fallback so the store also works outside the browser (tests). */
+const memoryStorage = (() => {
+  const map = new Map<string, string>();
+  return {
+    getItem: (k: string) => map.get(k) ?? null,
+    setItem: (k: string, v: string) => void map.set(k, v),
+    removeItem: (k: string) => void map.delete(k),
+  };
+})();
 const DAY = 86_400_000;
 
 function record(user: UserState, kind: TxKind, label: string): UserState {
@@ -234,7 +244,7 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'tide-demo-v1',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => (typeof localStorage !== 'undefined' ? localStorage : memoryStorage)),
       partialize: (s) => ({
         connected: s.connected,
         initialized: s.initialized,

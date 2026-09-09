@@ -54,7 +54,7 @@ export function Markets() {
         />
       </div>
 
-      <div className="bg-panel border border-line rounded-md overflow-x-auto">
+      <div className="bg-panel border border-line rounded-md overflow-x-auto lg:overflow-visible">
         <table className="w-full text-sm num min-w-[860px]">
           <thead>
             <tr className="text-xs text-ink-3 border-b border-line">

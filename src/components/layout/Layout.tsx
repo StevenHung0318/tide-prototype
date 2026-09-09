@@ -7,13 +7,16 @@ import { useStore } from '@/store/useStore';
 
 export function Layout() {
   usePendingTicker();
-  // Demo control: ?market=open|closed|auto forces the US market status.
+  // Demo controls (URL params): ?market=open|closed|auto forces the US market status.
   const [params] = useSearchParams();
   const setOverride = useStore((s) => s.setMarketOverride);
+  const connect = useStore((s) => s.connect);
   useEffect(() => {
     const m = params.get('market');
     if (m === 'open' || m === 'closed' || m === 'auto') setOverride(m);
-  }, [params, setOverride]);
+    // Demo control: ?wallet=demo connects the demo wallet on load.
+    if (params.get('wallet') === 'demo') void connect();
+  }, [params, setOverride, connect]);
 
   return (
     <div className="min-h-screen flex flex-col">

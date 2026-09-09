@@ -23,7 +23,8 @@ export function MarketBadge() {
     >
       <span className={cx('inline-flex items-center gap-2 h-8 px-2.5 rounded border text-xs cursor-help', open ? 'border-aqua/30 text-ink-2' : 'border-amber/30 text-amber')}>
         <span className={cx('h-1.5 w-1.5 rounded-full', open ? 'bg-aqua' : 'bg-amber')} />
-        {open ? 'US market open' : 'US market closed'}
+        <span className="hidden sm:inline">{open ? 'US market open' : 'US market closed'}</span>
+        <span className="sm:hidden">{open ? 'Open' : 'Closed'}</span>
       </span>
     </Tooltip>
   );

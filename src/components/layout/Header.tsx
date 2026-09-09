@@ -31,8 +31,8 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-base/90 backdrop-blur border-b border-line">
-      <div className="mx-auto max-w-[1280px] px-4 md:px-6 h-14 flex items-center gap-6">
+    <header className="sticky top-0 z-30 bg-deep/90 backdrop-blur border-b border-line">
+      <div className="mx-auto max-w-[1280px] px-4 md:px-6 min-h-14 py-2 md:py-0 flex flex-wrap items-center gap-x-6 gap-y-2">
         <button onClick={onLogo} className="flex items-center gap-2 select-none" aria-label="Tide">
           <svg viewBox="0 0 32 32" className="h-6 w-6" aria-hidden>
             <rect width="32" height="32" rx="6" fill="#161E2E" />
@@ -41,7 +41,7 @@ export function Header() {
           </svg>
           <span className="display text-lg font-semibold tracking-tight">Tide</span>
         </button>
-        <nav className="flex items-center gap-1">
+        <nav className="flex items-center gap-1 order-last w-full md:order-none md:w-auto overflow-x-auto">
           {NAV.map((n) => (
             <NavLink
               key={n.to}
@@ -55,7 +55,7 @@ export function Header() {
             </NavLink>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-2 shrink-0">
           <MarketBadge />
           <span className="hidden md:inline-flex items-center gap-1.5 h-8 px-2.5 rounded border border-line text-xs text-ink-2">
             <span className="h-1.5 w-1.5 rounded-full bg-up" />

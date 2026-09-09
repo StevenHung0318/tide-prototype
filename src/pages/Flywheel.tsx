@@ -119,8 +119,8 @@ function EmissionsChart({ weeks }: { weeks: ReturnType<typeof emissionsSeries> }
 const NODES = [
   { id: 'deposits', label: 'Deposits', tip: 'Users zap single assets into vaults; TVL grows.' },
   { id: 'fees', label: 'Fees', tip: 'Vaults earn swap fees; 10% performance fee is protocol revenue.' },
-  { id: 'buybacks', label: 'Buybacks + emissions budget', tip: 'Revenue buys TIDE on market and sets next week\'s emissions.' },
-  { id: 'lockers', label: 'Locker rewards + boost demand', tip: 'Buybacks and forfeits flow to lockers; boosts make locking worth it.' },
+  { id: 'buybacks', label: 'Buybacks & emissions', tip: 'Revenue buys TIDE on market and sets next week\'s emissions.' },
+  { id: 'lockers', label: 'Locker rewards & boost', tip: 'Buybacks and forfeits flow to lockers; boosts make locking worth it.' },
   { id: 'back', label: 'More deposits', tip: 'Higher boosted APR attracts more TVL — and the loop repeats.' },
 ];
 
@@ -128,7 +128,7 @@ function FlywheelDiagram() {
   const [hover, setHover] = useState<string | null>(null);
   const cx0 = 260;
   const cy0 = 150;
-  const r = 105;
+  const r = 108;
   const pts = NODES.map((n, i) => {
     const a = -Math.PI / 2 + (i / NODES.length) * Math.PI * 2;
     return { ...n, x: cx0 + r * Math.cos(a), y: cy0 + r * Math.sin(a) };
@@ -149,16 +149,16 @@ function FlywheelDiagram() {
               const dx = q.x - p.x, dy = q.y - p.y;
               const len = Math.hypot(dx, dy);
               const ux = dx / len, uy = dy / len;
-              const pad = 34;
+              const pad = 42;
               return <line key={p.id} x1={p.x + ux * pad} y1={p.y + uy * pad} x2={q.x - ux * pad} y2={q.y - uy * pad} stroke="#2E3B55" strokeWidth="1.5" markerEnd="url(#arr)" />;
             })}
             {pts.map((p) => (
               <g key={p.id} onMouseEnter={() => setHover(p.id)} onMouseLeave={() => setHover(null)} className="cursor-help">
-                <circle cx={p.x} cy={p.y} r="30" fill={hover === p.id ? '#1C2638' : '#161E2E'} stroke={hover === p.id ? AQUA : '#2E3B55'} strokeWidth="1.5" />
+                <circle cx={p.x} cy={p.y} r="38" fill={hover === p.id ? '#1C2638' : '#161E2E'} stroke={hover === p.id ? AQUA : '#2E3B55'} strokeWidth="1.5" />
                 <text x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle" fill={hover === p.id ? '#E6EBF5' : '#A6B0C3'} fontSize="10" fontFamily="Inter, system-ui">
-                  {p.label.split(' + ').map((line, li, arr) => (
+                  {p.label.split(' & ').map((line, li, arr) => (
                     <tspan key={li} x={p.x} dy={li === 0 ? (arr.length > 1 ? -6 : 0) : 12}>
-                      {li === 0 && arr.length > 1 ? `${line} +` : line}
+                      {li === 0 && arr.length > 1 ? `${line} &` : line}
                     </tspan>
                   ))}
                 </text>

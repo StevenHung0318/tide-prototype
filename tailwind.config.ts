@@ -10,7 +10,7 @@ export default {
       white: '#FFFFFF',
       black: '#000000',
       // Surfaces
-      base: '#0E1420',
+      deep: '#0E1420',
       panel: '#161E2E',
       'panel-2': '#1C2638',
       line: '#232E44',

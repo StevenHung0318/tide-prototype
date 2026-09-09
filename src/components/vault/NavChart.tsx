@@ -25,8 +25,8 @@ export function NavChart({ vault: v }: { vault: Vault }) {
     <Card
       title="Performance"
       action={
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3 text-xs num">
+        <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1">
+          <div className="flex flex-wrap items-center gap-3 text-xs num">
             <span className="inline-flex items-center gap-1.5 text-ink-2">
               <span className="h-0.5 w-3 bg-aqua" /> {v.receiptSymbol} <span className={tdlpRet >= 0 ? 'text-up' : 'text-down'}>{fmtPctSigned(tdlpRet, 2)}</span>
             </span>

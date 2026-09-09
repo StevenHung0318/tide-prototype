@@ -146,7 +146,7 @@ function Deposit({ vault: v, autoFocus }: { vault: Vault; autoFocus?: boolean })
       )}
 
       {preview && (
-        <div className="rounded border border-line bg-base p-3 text-xs num space-y-1.5 animate-fade-in">
+        <div className="rounded border border-line bg-deep p-3 text-xs num space-y-1.5 animate-fade-in">
           <div className="text-ink-3 font-medium">{isDual ? 'Deposit preview' : 'Auto-swap preview'}</div>
           {!isDual && (
             <>
@@ -290,7 +290,7 @@ function Withdraw({ vault: v }: { vault: Vault }) {
         </div>
       </div>
       {preview && (
-        <div className="rounded border border-line bg-base p-3 text-xs num space-y-1.5 animate-fade-in">
+        <div className="rounded border border-line bg-deep p-3 text-xs num space-y-1.5 animate-fade-in">
           <div className="text-ink-3 font-medium">Withdrawal preview</div>
           <Line k="Redeem" v={`${fmtToken(preview.tdlp, 1)} ${v.receiptSymbol} · ${fmtUsd(preview.grossUsd, { compact: false, cents: true })}`} />
           <Line k={`Withdrawal fee ${fmtPct(CONSTANTS.WITHDRAWAL_FEE)}`} v={`-${fmtUsd(preview.feeUsd, { compact: false, cents: true })}`} />

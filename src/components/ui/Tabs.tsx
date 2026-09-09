@@ -11,7 +11,7 @@ interface Props<T extends string> {
 /** Segmented control — used for Deposit/Withdraw, 30D/7D, asset chips. */
 export function Segmented<T extends string>({ value, onChange, options, size = 'md', className }: Props<T>) {
   return (
-    <div className={cx('inline-flex rounded border border-line bg-base p-0.5 gap-0.5', className)} role="tablist">
+    <div className={cx('inline-flex rounded border border-line bg-deep p-0.5 gap-0.5', className)} role="tablist">
       {options.map((o) => (
         <button
           key={o.value}

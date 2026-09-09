@@ -5,6 +5,7 @@ import { DEMO_ADDRESS } from '@/lib/constants';
 import { fmtToken, fmtUsd, shortAddress } from '@/lib/format';
 import { CONSTANTS } from '@/lib/constants';
 import { TokenIcon } from '@/components/ui/TokenIcon';
+import { TOKEN_PRICES } from '@/data/vaults';
 
 export function WalletButton() {
   const connected = useStore((s) => s.connected);
@@ -48,7 +49,7 @@ export function WalletButton() {
           <div className="divide-y divide-line text-sm">
             <Row token="TIDE" amount={tide} usd={tide * CONSTANTS.TIDE_PRICE} tide />
             <Row token="USDC" amount={balances.USDC ?? 0} usd={balances.USDC ?? 0} />
-            <Row token="TSLAx" amount={balances.TSLAx ?? 0} usd={(balances.TSLAx ?? 0) * 425.8} />
+            <Row token="TSLAx" amount={balances.TSLAx ?? 0} usd={(balances.TSLAx ?? 0) * TOKEN_PRICES.TSLAx} />
           </div>
           <Button variant="secondary" size="sm" block className="mt-3" onClick={() => { disconnect(); setOpen(false); }}>
             Disconnect

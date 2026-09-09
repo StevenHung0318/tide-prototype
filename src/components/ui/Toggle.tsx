@@ -22,7 +22,7 @@ export function Toggle({ checked, onChange, label, tone = 'aqua' }: Props) {
     >
       <span
         className={cx(
-          'inline-block h-3.5 w-3.5 rounded-full bg-base transition-transform duration-150',
+          'inline-block h-3.5 w-3.5 rounded-full bg-deep transition-transform duration-150',
           checked ? 'translate-x-[18px]' : 'translate-x-[2px]',
         )}
       />

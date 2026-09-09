@@ -66,7 +66,7 @@ export function fmtQuote(v: number): string {
 }
 
 export function fmtMultiplier(v: number): string {
-  return `×${v.toFixed(2).replace(/\.?0+$/, '')}`;
+  return `×${(Math.floor(v * 100 + 1e-9) / 100).toFixed(2).replace(/\.?0+$/, '')}`;
 }
 
 export function fmtDate(d: Date | string | number): string {

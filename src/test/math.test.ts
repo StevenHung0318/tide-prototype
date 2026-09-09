@@ -142,3 +142,22 @@ describe('protocol figures — §4', () => {
     expect(m.circulatingMarketCap(PROTOCOL.circulatingTide) / 1e6).toBeCloseTo(3.1, 1);
   });
 });
+
+describe('chart series', () => {
+  it('NAV series starts at exactly 1.0 and ends at pricePerShare / benchmark', async () => {
+    const { navSeries } = await import('@/lib/series');
+    const s = navSeries('tsla-usdc', 1.0032, 0.0032, 30);
+    expect(s[0].tdlp).toBeCloseTo(1, 10);
+    expect(s[0].hodl).toBeCloseTo(1, 10);
+    expect(s[29].tdlp).toBeCloseTo(1.0032, 10);
+    expect(s[29].hodl).toBeCloseTo(1.0, 10);
+  });
+  it('emissions series pins the final week to protocol figures', async () => {
+    const { emissionsSeries } = await import('@/lib/series');
+    const w = emissionsSeries(42_000, 8_600);
+    expect(w).toHaveLength(8);
+    expect(w[7].emissionsUsd).toBe(42_000);
+    expect(w[7].buybacksUsd).toBe(8_600);
+    for (let i = 1; i < 8; i++) expect(w[i].buybacksUsd).toBeGreaterThanOrEqual(w[i - 1].buybacksUsd * 0.95);
+  });
+});

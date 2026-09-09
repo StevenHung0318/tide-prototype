@@ -8,7 +8,7 @@
     background: #0E1420;
   }
   body {
-    @apply bg-base text-ink font-sans text-base antialiased;
+    @apply bg-deep text-ink font-sans text-base antialiased;
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum' 1, 'cv11' 1;
   }

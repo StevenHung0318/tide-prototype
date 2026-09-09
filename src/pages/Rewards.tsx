@@ -144,7 +144,7 @@ function OptionCard({ selected, onSelect, title, amount, sub, note, highlight }:
       aria-pressed={selected}
       className={cx(
         'text-left rounded-md border p-4 transition-colors relative',
-        selected ? 'border-tide bg-tide/[0.07]' : 'border-line hover:border-line-2 bg-base',
+        selected ? 'border-tide bg-tide/[0.07]' : 'border-line hover:border-line-2 bg-deep',
       )}
     >
       <div className="flex items-center justify-between">
@@ -316,7 +316,7 @@ function BoostCalculator() {
             </div>
           </div>
 
-          <div className="rounded border border-line bg-base p-3 text-sm num space-y-2">
+          <div className="rounded border border-line bg-deep p-3 text-sm num space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-ink-2">Boost</span>
               <span className="text-tide font-medium">

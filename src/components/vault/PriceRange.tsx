@@ -45,7 +45,7 @@ export function PriceRange({ vault: v, market }: Props) {
 
   const tone = g.defensive ? 'amber' : 'aqua';
   const bandFill = g.defensive ? 'bg-amber/25 border-amber/70' : 'bg-aqua/20 border-aqua/70';
-  const resetFill = g.defensive ? 'bg-amber/10' : 'bg-aqua/[0.07]';
+  const resetFill = g.defensive ? 'bg-amber/10' : 'bg-aqua/10';
   const priceTone = inBand ? (g.defensive ? 'bg-amber' : 'bg-aqua') : 'bg-down';
   const priceText = inBand ? (g.defensive ? 'text-amber' : 'text-aqua') : 'text-down';
   const deviation = (v.currentPrice - v.rangeCenter) / v.rangeCenter;
@@ -115,7 +115,7 @@ export function PriceRange({ vault: v, market }: Props) {
               <span className={cx('absolute -top-5 right-0 translate-x-1/2 text-2xs num whitespace-nowrap', g.defensive ? 'text-amber' : 'text-aqua')}>
                 {fmtQuote(g.upper)}
               </span>
-              <span className={cx('absolute -bottom-5 left-1/2 -translate-x-1/2 text-2xs whitespace-nowrap', g.defensive ? 'text-amber/80' : 'text-ink-3')}>
+              <span className={cx('absolute -bottom-5 left-1.5 text-2xs whitespace-nowrap', g.defensive ? 'text-amber/80' : 'text-ink-3')}>
                 LP range ±{Math.round(g.widthPct * 100)}%
               </span>
             </div>

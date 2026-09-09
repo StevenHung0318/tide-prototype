@@ -15,7 +15,7 @@ interface Props {
 export function AmountInput({ value, onChange, token, balance, balanceLabel = 'Balance', onMax, error, hint, autoFocus }: Props) {
   return (
     <div>
-      <div className={cx('flex items-center gap-2 bg-base border rounded px-3 h-12', error ? 'border-down/70' : 'border-line focus-within:border-ink-3')}>
+      <div className={cx('flex items-center gap-2 bg-deep border rounded px-3 h-12', error ? 'border-down/70' : 'border-line focus-within:border-ink-3')}>
         <input
           type="number"
           inputMode="decimal"
