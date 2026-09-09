@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { VAULTS, vaultName } from '@/data/vaults';
 import { PROTOCOL } from '@/data/protocol';
@@ -54,7 +55,7 @@ export function Markets() {
         />
       </div>
 
-      <div className="bg-panel border border-line rounded-md overflow-x-auto lg:overflow-visible">
+      <div className="bg-panel border border-line rounded-md overflow-x-auto">
         <table className="w-full text-sm num min-w-[860px]">
           <thead>
             <tr className="text-xs text-ink-3 border-b border-line">
@@ -91,6 +92,13 @@ function VaultRow({ vault: v, tvl }: { vault: Vault; tvl: number }) {
   const position = useStore((s) => s.user.positions[v.id]);
   const myValue = d.connected ? m.positionValue(position, v) : 0;
   const [hover, setHover] = useState(false);
+  const aprCell = useRef<HTMLTableCellElement>(null);
+  const [pop, setPop] = useState<{ top: number; right: number } | null>(null);
+  const onEnter = () => {
+    const r = aprCell.current?.getBoundingClientRect();
+    if (r) setPop({ top: r.bottom + 4, right: window.innerWidth - r.right });
+    setHover(true);
+  };
 
   return (
     <tr
@@ -110,18 +118,25 @@ function VaultRow({ vault: v, tvl }: { vault: Vault; tvl: number }) {
         <TierBadge tier={v.tier} />
       </td>
       <td className="px-3 py-3 text-right text-ink">{fmtUsd(tvl)}</td>
-      <td className="px-3 py-3 text-right relative" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+      <td ref={aprCell} className="px-3 py-3 text-right" onMouseEnter={onEnter} onMouseLeave={() => setHover(false)}>
         <div className={cx('display text-lg font-semibold leading-tight', showBoost ? 'text-aqua' : 'text-ink')}>
           {fmtPct(showBoost ? b.yourApr : b.totalApr)}
         </div>
         <div className="text-2xs text-ink-3">
           {fmtPct(b.feeApr)} fees + <span className="text-tide">{fmtPct(showBoost ? b.yourTideApr : b.baseTideApr)} TIDE</span>
         </div>
-        {hover && (
-          <div className="absolute right-0 top-full z-30 w-72 bg-panel-2 border border-line-2 rounded-md shadow-pop p-3 text-left animate-fade-in" onClick={(e) => e.stopPropagation()}>
-            <AprBreakdown vault={v} compact />
-          </div>
-        )}
+        {hover &&
+          pop &&
+          createPortal(
+            <div
+              className="fixed z-40 w-72 bg-panel-2 border border-line-2 rounded-md shadow-pop p-3 text-left animate-fade-in"
+              style={{ top: pop.top, right: pop.right }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <AprBreakdown vault={v} compact />
+            </div>,
+            document.body,
+          )}
       </td>
       <td className="px-3 py-3">
         <RangeStatusBadge status={status} />
