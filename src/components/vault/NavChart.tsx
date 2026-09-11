@@ -83,8 +83,7 @@ export function NavChart({ vault: v }: { vault: Vault }) {
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <div className="mt-2 flex items-center justify-between text-xs">
-        <span className="text-ink-3">tdLP price is the vault's net asset value per token, after fees. Benchmark holds 50/50 unmanaged.</span>
+      <div className="mt-2 flex items-center justify-end text-xs">
         <span className={cx('num font-medium', lead >= 0 ? 'text-up' : 'text-down')}>
           {lead >= 0 ? 'Outperforming' : 'Underperforming'} HODL by {fmtPctSigned(Math.abs(lead), 2).replace('+', '')}
         </span>

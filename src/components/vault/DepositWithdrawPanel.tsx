@@ -124,7 +124,6 @@ function Deposit({ vault: v, autoFocus }: { vault: Vault; autoFocus?: boolean })
             </button>
           ))}
         </div>
-        {!isDual && <div className="text-2xs text-ink-3 mt-1.5">One-click zap: the vault swaps into both sides for you.</div>}
       </div>
 
       {isDual ? (
@@ -147,48 +146,26 @@ function Deposit({ vault: v, autoFocus }: { vault: Vault; autoFocus?: boolean })
 
       {preview && (
         <div className="rounded border border-line bg-deep p-3 text-xs num space-y-1.5 animate-fade-in">
-          <div className="text-ink-3 font-medium">{isDual ? 'Deposit preview' : 'Auto-swap preview'}</div>
-          {!isDual && (
-            <>
-              <div className="text-ink">{fmtToken(preview.inputAmount)} {preview.inputToken}</div>
-              <div className="text-ink-2">
-                → {preview.legs.map((l, i) => (
-                  <span key={l.token}>
-                    {i > 0 && ' + '}
-                    {fmtToken(l.amount)} {l.token}
-                  </span>
-                ))}
-                {preview.swapToken && preview.swapPrice && (
-                  <span className="text-ink-3"> (swapped at ${preview.swapPrice >= 1 ? preview.swapPrice.toFixed(2) : preview.swapPrice.toPrecision(3)})</span>
-                )}
-              </div>
-              <Line k="Price impact" v={fmtPct(preview.priceImpact, 2)} tone={preview.priceImpact > 0.01 ? 'text-amber' : undefined} />
-              <Line k="Swap fee" v={`~${fmtUsd(preview.swapFeeUsd, { compact: false, cents: true })}`} />
-            </>
-          )}
-          {isDual && preview.legs.map((l) => <Line key={l.token} k={l.token} v={`${fmtToken(l.amount)} · ${fmtUsd(l.usd, { compact: false, cents: true })}`} />)}
-          <div className="border-t border-line my-1" />
           <div className="flex justify-between items-baseline">
             <span className="text-ink-2">You receive</span>
             <span className="text-ink font-semibold text-sm">{fmtToken(preview.tdlp, 1)} {v.receiptSymbol}</span>
           </div>
-          <div className="text-ink-3 text-right">1 {v.receiptSymbol} = ${preview.pricePerShare.toFixed(4)}</div>
+          {!isDual && (
+            <div className="text-ink-3">
+              Auto-swapped into {preview.legs.map((l) => `${fmtToken(l.amount)} ${l.token}`).join(' + ')} · {fmtPct(preview.priceImpact, 2)} impact · ~{fmtUsd(preview.swapFeeUsd, { compact: false, cents: true })} fee
+            </div>
+          )}
           {connected && d.lockedTide > 0 && Math.abs(boostAfter - d.boost) > 0.0005 && (
-            <div className="border-t border-line pt-1.5 flex justify-between">
+            <div className="flex justify-between border-t border-line pt-1.5">
               <span className="text-ink-2">Boost after deposit</span>
-              <span className="text-tide">
-                ×{d.boost.toFixed(2)} → ×{boostAfter.toFixed(2)} <span className="text-ink-3">(ratio diluted)</span>
-              </span>
+              <span className="text-tide">×{d.boost.toFixed(2)} → ×{boostAfter.toFixed(2)}</span>
             </div>
           )}
         </div>
       )}
 
-      <div className="flex items-start justify-between gap-3 rounded border border-line p-3">
-        <div>
-          <div className="text-sm font-medium text-ink">Stake to earn TIDE</div>
-          <div className="text-xs text-ink-3 mt-0.5">Auto-stake your {v.receiptSymbol} to start mining TIDE immediately.</div>
-        </div>
+      <div className="flex items-center justify-between gap-3 rounded border border-line px-3 h-11">
+        <span className="text-sm font-medium text-ink">Stake to earn TIDE</span>
         <Toggle checked={stake} onChange={setStake} label="Stake to earn TIDE" tone="tide" />
       </div>
 
@@ -291,11 +268,6 @@ function Withdraw({ vault: v }: { vault: Vault }) {
       </div>
       {preview && (
         <div className="rounded border border-line bg-deep p-3 text-xs num space-y-1.5 animate-fade-in">
-          <div className="text-ink-3 font-medium">Withdrawal preview</div>
-          <Line k="Redeem" v={`${fmtToken(preview.tdlp, 1)} ${v.receiptSymbol} · ${fmtUsd(preview.grossUsd, { compact: false, cents: true })}`} />
-          <Line k={`Withdrawal fee ${fmtPct(CONSTANTS.WITHDRAWAL_FEE)}`} v={`-${fmtUsd(preview.feeUsd, { compact: false, cents: true })}`} />
-          <div className="text-ink-3">Fee stays in the vault for remaining LPs.</div>
-          <div className="border-t border-line my-1" />
           <div className="flex justify-between items-baseline">
             <span className="text-ink-2">You receive</span>
             <span className="text-ink font-semibold text-sm text-right">
@@ -304,9 +276,9 @@ function Withdraw({ vault: v }: { vault: Vault }) {
               ))}
             </span>
           </div>
+          <div className="text-ink-3">After {fmtPct(CONSTANTS.WITHDRAWAL_FEE)} withdrawal fee ({fmtUsd(preview.feeUsd, { compact: false, cents: true })})</div>
         </div>
       )}
-      {touchesStaked && preview && <div className="text-xs text-ink-3">Part of this amount is staked. We'll unstake and withdraw in one transaction.</div>}
       <Button block size="lg" variant="secondary" onClick={submit} disabled={connected && (!preview || insufficient)} loading={busy}>
         {busy ? 'Confirming…' : !connected ? 'Connect wallet' : touchesStaked ? 'Unstake & withdraw' : 'Withdraw'}
       </Button>
@@ -354,15 +326,6 @@ function PositionSummary({ vault: v }: { vault: Vault }) {
           Stake {fmtToken(position.unstaked, 1)} {v.receiptSymbol} to earn TIDE
         </Button>
       )}
-    </div>
-  );
-}
-
-function Line({ k, v, tone }: { k: string; v: string; tone?: string }) {
-  return (
-    <div className="flex justify-between gap-3">
-      <span className="text-ink-2">{k}</span>
-      <span className={tone ?? 'text-ink'}>{v}</span>
     </div>
   );
 }

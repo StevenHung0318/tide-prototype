@@ -2,10 +2,9 @@ import { useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { VAULTS, vaultName } from '@/data/vaults';
-import { PROTOCOL } from '@/data/protocol';
 import { CONSTANTS } from '@/lib/constants';
 import * as m from '@/lib/math';
-import { fmtInt, fmtPct, fmtUsd, cx } from '@/lib/format';
+import { fmtPct, fmtUsd, cx } from '@/lib/format';
 import type { Tier, Vault } from '@/lib/types';
 import { useStore } from '@/store/useStore';
 import { useMarketStatus, useUserDerived, useVaultApr } from '@/store/selectors';
@@ -20,6 +19,7 @@ type Filter = 'All' | Tier;
 
 export function Markets() {
   const tvlDelta = useStore((s) => s.user.tvlDelta);
+  const d = useUserDerived();
   const [filter, setFilter] = useState<Filter>('All');
   const rows = useMemo(
     () =>
@@ -28,20 +28,18 @@ export function Markets() {
         .sort((a, b) => b.tvl - a.tvl),
     [filter, tvlDelta],
   );
-  const totalTvl = m.totalTvl(VAULTS, tvlDelta);
-  const fees24h = m.dailyFees(VAULTS, tvlDelta);
+  const showMine = d.connected && d.hasPositions;
 
   return (
-    <div className="space-y-5">
-      <StatRow>
-        <Stat label="Total TVL" value={fmtUsd(totalTvl)} sub={`${VAULTS.length} vaults`} />
-        <Stat label="24h fees earned" value={fmtUsd(fees24h, { compact: false })} sub="Compounded into positions" />
-        <Stat label="$TIDE price" value={`$${CONSTANTS.TIDE_PRICE.toFixed(3)}`} tone="tide" sub={`Mcap ${fmtUsd(m.circulatingMarketCap(PROTOCOL.circulatingTide))} circ.`} />
-        <Stat label="Weekly emissions" value={`${fmtInt(PROTOCOL.weeklyEmissionsTide)} TIDE`} tone="tide" sub={fmtUsd(PROTOCOL.weeklyEmissionsUsd, { compact: false })} />
+    <div className="space-y-6">
+      <StatRow cols={3}>
+        <Stat label="Total TVL" value={fmtUsd(m.totalTvl(VAULTS, tvlDelta))} />
+        <Stat label="Fees earned (24h)" value={fmtUsd(m.dailyFees(VAULTS, tvlDelta), { compact: false })} />
+        <Stat label="TIDE price" value={`$${CONSTANTS.TIDE_PRICE.toFixed(3)}`} tone="tide" />
       </StatRow>
 
       <div className="flex items-center justify-between gap-4">
-        <h1 className="display text-lg font-semibold">LP vaults</h1>
+        <h1 className="display text-lg font-semibold">Vaults</h1>
         <Segmented<Filter>
           size="sm"
           value={filter}
@@ -56,41 +54,34 @@ export function Markets() {
       </div>
 
       <div className="bg-panel border border-line rounded-md overflow-x-auto">
-        <table className="w-full text-sm num min-w-[860px]">
+        <table className="w-full text-sm num min-w-[720px]">
           <thead>
             <tr className="text-xs text-ink-3 border-b border-line">
               <th className="text-left font-medium px-4 h-10">Pool</th>
-              <th className="text-left font-medium px-3 h-10">Tier</th>
-              <th className="text-right font-medium px-3 h-10">TVL</th>
-              <th className="text-right font-medium px-3 h-10">APR</th>
-              <th className="text-left font-medium px-3 h-10">Range status</th>
-              <th className="text-right font-medium px-3 h-10">My deposit</th>
-              <th className="px-4 h-10" />
+              <th className="text-right font-medium px-3 h-10 w-[14%]">TVL</th>
+              <th className="text-right font-medium px-3 h-10 w-[14%]">APR</th>
+              <th className="text-left font-medium px-3 h-10 pl-8 w-[18%]">Status</th>
+              {showMine && <th className="text-right font-medium px-3 h-10 w-[14%]">My deposit</th>}
+              <th className="px-4 h-10 w-[12%]" />
             </tr>
           </thead>
           <tbody>
             {rows.map(({ v, tvl }) => (
-              <VaultRow key={v.id} vault={v} tvl={tvl} />
+              <VaultRow key={v.id} vault={v} tvl={tvl} showMine={showMine} />
             ))}
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-ink-3">
-        APRs are 7-day trailing fee yield plus TIDE emissions at the current price. Degen vaults run narrow ranges on volatile pairs and
-        can underperform holding.
-      </p>
     </div>
   );
 }
 
-function VaultRow({ vault: v, tvl }: { vault: Vault; tvl: number }) {
+function VaultRow({ vault: v, tvl, showMine }: { vault: Vault; tvl: number; showMine: boolean }) {
   const navigate = useNavigate();
   const market = useMarketStatus();
   const status = m.rangeStatus(v, market);
   const { breakdown: b, showBoost } = useVaultApr(v);
-  const d = useUserDerived();
   const position = useStore((s) => s.user.positions[v.id]);
-  const myValue = d.connected ? m.positionValue(position, v) : 0;
   const [hover, setHover] = useState(false);
   const aprCell = useRef<HTMLTableCellElement>(null);
   const [pop, setPop] = useState<{ top: number; right: number } | null>(null);
@@ -105,26 +96,16 @@ function VaultRow({ vault: v, tvl }: { vault: Vault; tvl: number }) {
       className={cx('border-b border-line last:border-0 hover:bg-panel-2/60 transition-colors cursor-pointer', v.tier === 'Degen' && 'bg-amber/[0.035]')}
       onClick={() => navigate(`/vault/${v.id}`)}
     >
-      <td className="px-4 py-3">
+      <td className="px-4 py-3.5">
         <div className="flex items-center gap-3">
           <TokenPair a={v.token0} b={v.token1} />
-          <div>
-            <div className="font-medium text-ink">{vaultName(v)}</div>
-            <div className="text-2xs text-ink-3">{v.receiptSymbol}</div>
-          </div>
+          <span className="font-medium text-ink">{vaultName(v)}</span>
+          <TierBadge tier={v.tier} />
         </div>
       </td>
-      <td className="px-3 py-3">
-        <TierBadge tier={v.tier} />
-      </td>
-      <td className="px-3 py-3 text-right text-ink">{fmtUsd(tvl)}</td>
-      <td ref={aprCell} className="px-3 py-3 text-right" onMouseEnter={onEnter} onMouseLeave={() => setHover(false)}>
-        <div className={cx('display text-lg font-semibold leading-tight', showBoost ? 'text-aqua' : 'text-ink')}>
-          {fmtPct(showBoost ? b.yourApr : b.totalApr)}
-        </div>
-        <div className="text-2xs text-ink-3">
-          {fmtPct(b.feeApr)} fees + <span className="text-tide">{fmtPct(showBoost ? b.yourTideApr : b.baseTideApr)} TIDE</span>
-        </div>
+      <td className="px-3 py-3.5 text-right text-ink">{fmtUsd(tvl)}</td>
+      <td ref={aprCell} className="px-3 py-3.5 text-right" onMouseEnter={onEnter} onMouseLeave={() => setHover(false)}>
+        <span className={cx('display text-lg font-semibold', showBoost ? 'text-aqua' : 'text-ink')}>{fmtPct(showBoost ? b.yourApr : b.totalApr)}</span>
         {hover &&
           pop &&
           createPortal(
@@ -138,17 +119,15 @@ function VaultRow({ vault: v, tvl }: { vault: Vault; tvl: number }) {
             document.body,
           )}
       </td>
-      <td className="px-3 py-3">
+      <td className="px-3 py-3.5 pl-8">
         <RangeStatusBadge status={status} />
       </td>
-      <td className="px-3 py-3 text-right">
-        {d.connected && position ? (
-          <span className="text-ink">{fmtUsd(myValue, { compact: false })}</span>
-        ) : (
-          <span className="text-ink-3">—</span>
-        )}
-      </td>
-      <td className="px-4 py-3 text-right">
+      {showMine && (
+        <td className="px-3 py-3.5 text-right">
+          {position ? <span className="text-ink">{fmtUsd(m.positionValue(position, v), { compact: false })}</span> : <span className="text-ink-3">—</span>}
+        </td>
+      )}
+      <td className="px-4 py-3.5 text-right">
         <Link to={`/vault/${v.id}?action=deposit`} onClick={(e) => e.stopPropagation()}>
           <Button size="sm" variant={v.tier === 'Degen' ? 'secondary' : 'primary'}>
             Deposit

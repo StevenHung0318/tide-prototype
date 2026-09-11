@@ -39,11 +39,12 @@ export function Stat({ label, value, sub, tone = 'default', size = 'md', classNa
 }
 
 /** Horizontal row of stats separated by hairlines (PRD §1.1). */
-export function StatRow({ children, className }: { children: ReactNode; className?: string }) {
+export function StatRow({ children, className, cols = 4 }: { children: ReactNode; className?: string; cols?: 3 | 4 }) {
   return (
     <div
       className={cx(
-        'grid grid-cols-2 md:grid-cols-4 bg-panel border border-line rounded-md divide-x divide-line [&>*]:px-4 [&>*]:py-3',
+        'grid grid-cols-2 bg-panel border border-line rounded-md divide-x divide-line [&>*]:px-4 [&>*]:py-3',
+        cols === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4',
         className,
       )}
     >

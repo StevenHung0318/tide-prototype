@@ -39,7 +39,7 @@ export function PriceRange({ vault: v, market }: Props) {
   const priceX = Math.min(99, Math.max(1, x(v.currentPrice)));
 
   const ticks = useMemo(() => {
-    const n = 6;
+    const n = 4;
     return Array.from({ length: n + 1 }, (_, i) => domain.min + ((domain.max - domain.min) * i) / n);
   }, [domain]);
 
@@ -48,17 +48,11 @@ export function PriceRange({ vault: v, market }: Props) {
   const resetFill = g.defensive ? 'bg-amber/10' : 'bg-aqua/10';
   const priceTone = inBand ? (g.defensive ? 'bg-amber' : 'bg-aqua') : 'bg-down';
   const priceText = inBand ? (g.defensive ? 'text-amber' : 'text-aqua') : 'text-down';
-  const deviation = (v.currentPrice - v.rangeCenter) / v.rangeCenter;
 
   return (
     <section className="bg-panel border border-line rounded-md">
       <header className="flex items-center justify-between px-4 h-11 border-b border-line">
-        <div className="flex items-center gap-3">
-          <h3 className="display text-sm font-semibold">Price range</h3>
-          <span className="text-xs text-ink-3 num">
-            {v.token0} priced in {v.token1}
-          </span>
-        </div>
+        <h3 className="display text-sm font-semibold">Price range</h3>
         {g.defensive ? (
           <Tooltip
             wide
@@ -67,7 +61,7 @@ export function PriceRange({ vault: v, market }: Props) {
           >
             <span className="inline-flex items-center gap-1.5 text-xs text-amber cursor-help">
               <span className="h-1.5 w-1.5 rounded-full bg-amber ring-2 ring-amber/25" />
-              Defensive range — US market closed
+              Defensive · US market closed
             </span>
           </Tooltip>
         ) : (
@@ -115,9 +109,6 @@ export function PriceRange({ vault: v, market }: Props) {
               <span className={cx('absolute -top-5 right-0 translate-x-1/2 text-2xs num whitespace-nowrap', g.defensive ? 'text-amber' : 'text-aqua')}>
                 {fmtQuote(g.upper)}
               </span>
-              <span className={cx('absolute -bottom-5 left-1.5 text-2xs whitespace-nowrap', g.defensive ? 'text-amber/80' : 'text-ink-3')}>
-                LP range ±{Math.round(g.widthPct * 100)}%
-              </span>
             </div>
             {hoverReset && (
               <div
@@ -147,13 +138,12 @@ export function PriceRange({ vault: v, market }: Props) {
         {status === 'out' && (
           <div className="mt-2 text-xs text-down flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-down" />
-            Price {v.currentPrice < g.lower ? 'below' : 'above'} range for 14 min — auto-rebalance triggers at 30 min beyond the reset band.
+            Out of range for 14 min · auto-rebalance at 30 min
           </div>
         )}
         {g.defensive && (
           <div className="mt-2 text-xs text-ink-3">
-            Normal range ±{Math.round(v.rangeWidthPct * 100)}% resumes at the US open. Price sits {deviation >= 0 ? '+' : ''}
-            {(deviation * 100).toFixed(1)}% from the range centre.
+            Normal range ±{Math.round(v.rangeWidthPct * 100)}% resumes at the US open.
           </div>
         )}
       </div>

@@ -57,10 +57,6 @@ export function Header() {
         </nav>
         <div className="ml-auto flex items-center gap-2 shrink-0">
           <MarketBadge />
-          <span className="hidden md:inline-flex items-center gap-1.5 h-8 px-2.5 rounded border border-line text-xs text-ink-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-up" />
-            Robinhood Chain
-          </span>
           <WalletButton />
         </div>
       </div>

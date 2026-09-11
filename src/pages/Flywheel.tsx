@@ -4,7 +4,7 @@ import { PROTOCOL } from '@/data/protocol';
 import { CONSTANTS } from '@/lib/constants';
 import * as m from '@/lib/math';
 import { emissionsSeries } from '@/lib/series';
-import { cx, fmtInt, fmtPct, fmtUsd } from '@/lib/format';
+import { fmtInt, fmtPct, fmtUsd } from '@/lib/format';
 import { Stat, StatRow } from '@/components/ui/Stat';
 import { Card } from '@/components/ui/Card';
 import { KV } from '@/components/ui/KeyValue';
@@ -21,26 +21,20 @@ export function Flywheel() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <h1 className="display text-lg font-semibold">$TIDE flywheel</h1>
-          <p className="text-xs text-ink-3 mt-0.5">Token economy health, reported as-is. Buyback coverage below 60% is shown in amber.</p>
-        </div>
-      </div>
+      <h1 className="display text-lg font-semibold">TIDE flywheel</h1>
 
       <StatRow>
-        <Stat label="TIDE price" value={`$${CONSTANTS.TIDE_PRICE.toFixed(3)}`} tone="tide" sub="Mock spot" />
-        <Stat label="Market cap (circ.)" value={fmtUsd(m.circulatingMarketCap(PROTOCOL.circulatingTide))} sub={`${(PROTOCOL.circulatingTide / 1e6).toFixed(0)}M TIDE circulating`} />
-        <Stat label="Lock rate" value={fmtPct(PROTOCOL.lockRate, 0)} sub="Share of claims choosing 60-day lock" />
+        <Stat label="TIDE price" value={`$${CONSTANTS.TIDE_PRICE.toFixed(3)}`} tone="tide" />
+        <Stat label="Market cap" value={fmtUsd(m.circulatingMarketCap(PROTOCOL.circulatingTide))} />
+        <Stat label="Lock rate" value={fmtPct(PROTOCOL.lockRate, 0)} />
         <Stat
           label={
             <span className="inline-flex items-center gap-1.5">
-              Buyback coverage <InfoDot tip="This week's buybacks divided by the USD value of this week's emissions. ≥60% reads aqua; below that, amber." />
+              Buyback coverage <InfoDot tip="Buybacks ÷ emissions value this week. Amber below 60%." />
             </span>
           }
           value={fmtPct(coverage)}
           tone={healthy ? 'aqua' : 'amber'}
-          sub={`${fmtUsd(PROTOCOL.buybackThisWeekUsd, { compact: false })} ÷ ${fmtUsd(PROTOCOL.weeklyEmissionsUsd, { compact: false })}`}
         />
       </StatRow>
 
@@ -59,7 +53,6 @@ export function Flywheel() {
                 { k: "Next week's emissions", v: <span className="text-ink-2 font-normal">announced Friday</span> },
               ]}
             />
-            <p className="text-xs text-ink-3 mt-3">Half of buybacks fund the locker redistribution pool; the rest is burned.</p>
           </Card>
           <AllocationCard />
         </div>
@@ -79,7 +72,6 @@ function EmissionsChart({ weeks }: { weeks: ReturnType<typeof emissionsSeries> }
         </div>
       }
     >
-      <p className="text-xs text-ink-3 -mt-1 mb-3">Weekly emissions are announced 7 days ahead and scale with protocol revenue.</p>
       <div className="h-60">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={weeks} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barGap={2} barCategoryGap="28%">
@@ -106,12 +98,6 @@ function EmissionsChart({ weeks }: { weeks: ReturnType<typeof emissionsSeries> }
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <div className="mt-2 grid grid-cols-8 gap-1 text-2xs num text-center">
-        {weeks.map((w) => (
-          <div key={w.week} className={cx(w.coverage >= 0.6 ? 'text-aqua' : 'text-amber')}>{fmtPct(w.coverage, 0)}</div>
-        ))}
-      </div>
-      <div className="text-2xs text-ink-3 text-center mt-0.5">Buyback coverage by week</div>
     </Card>
   );
 }
@@ -175,9 +161,7 @@ function FlywheelDiagram() {
               <p className="text-ink-2 mt-1 leading-relaxed">{active.tip}</p>
             </div>
           ) : (
-            <p className="text-ink-3 text-xs leading-relaxed">
-              Hover a node. The loop only compounds when fees fund buybacks faster than emissions dilute — which is why coverage is the honest number on this page.
-            </p>
+            <p className="text-ink-3 text-xs">Hover a step to see what it does.</p>
           )}
         </div>
       </div>
@@ -215,7 +199,7 @@ function AllocationCard() {
           ))}
         </ul>
       </div>
-      <p className="text-xs text-ink-3 mt-3">No private sale. No public sale. Mining is the only way to earn TIDE.</p>
+      <p className="text-xs text-ink-3 mt-3">No private or public sale. Mining is the only way to earn TIDE.</p>
     </Card>
   );
 }
