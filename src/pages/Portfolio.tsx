@@ -2,14 +2,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { VAULT_BY_ID, vaultName } from '@/data/vaults';
 import { CONSTANTS } from '@/lib/constants';
 import * as m from '@/lib/math';
-import { cx, fmtMultiplier, fmtPct, fmtPctSigned, fmtToken, fmtUsd, fmtUsdSigned } from '@/lib/format';
+import { cx, fmtMultiplier, fmtPct, fmtToken, fmtUsd } from '@/lib/format';
 import { useStore } from '@/store/useStore';
 import { useUserDerived, useVaultApr } from '@/store/selectors';
 import { Stat, StatRow } from '@/components/ui/Stat';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { TokenPair } from '@/components/ui/TokenIcon';
-import { TierBadge } from '@/components/ui/Badge';
 
 export function Portfolio() {
   const d = useUserDerived();
@@ -43,7 +42,7 @@ export function Portfolio() {
               <th className="text-left font-medium px-4 h-10">Pool</th>
               <th className="text-right font-medium px-3 h-10">Value</th>
               <th className="text-right font-medium px-3 h-10">Your APR</th>
-              <th className="text-right font-medium px-3 h-10">PnL</th>
+              <th className="text-right font-medium px-3 h-10">Fees earned</th>
               <th className="px-4 h-10" />
             </tr>
           </thead>
@@ -62,10 +61,16 @@ export function Portfolio() {
 function Summary() {
   const d = useUserDerived();
   const navigate = useNavigate();
+  const positions = useStore((s) => s.user.positions);
+  const now = Date.now();
+  const totalFees = Object.entries(positions).reduce((a, [id, p]) => {
+    const v = VAULT_BY_ID[id];
+    return v ? a + m.feesEarned(m.positionValue(p, v), v.feeApr7d, p.depositedAt, now) : a;
+  }, 0);
   return (
     <StatRow>
       <Stat label="Total value" value={fmtUsd(d.depositsUsd, { compact: false })} />
-      <Stat label="Net PnL" value={fmtUsdSigned(d.pnlUsd)} tone={d.pnlUsd > 0 ? 'up' : d.pnlUsd < 0 ? 'down' : 'default'} sub={d.costBasis > 0 ? fmtPctSigned(d.pnlPct) : undefined} />
+      <Stat label="Total fees earned" value={`+${fmtUsd(totalFees, { compact: false, cents: true })}`} tone="up" />
       <Stat
         label="Pending TIDE"
         value={`${fmtToken(d.pendingTide, 2)} TIDE`}
@@ -85,7 +90,7 @@ function PositionRow({ id, onManage }: { id: string; onManage: () => void }) {
   if (!v || !p) return null;
   const value = m.positionValue(p, v);
   const apr = showBoost ? b.yourApr : b.totalApr;
-  const pnl = value - p.costBasis;
+  const fees = m.feesEarned(value, v.feeApr7d, p.depositedAt, Date.now());
   const total = p.staked + p.unstaked;
   return (
     <tr className="border-b border-line last:border-0 hover:bg-panel-2/60 cursor-pointer" onClick={onManage}>
@@ -93,9 +98,7 @@ function PositionRow({ id, onManage }: { id: string; onManage: () => void }) {
         <div className="flex items-center gap-3">
           <TokenPair a={v.token0} b={v.token1} />
           <div>
-            <div className="font-medium text-ink flex items-center gap-2">
-              {vaultName(v)} <TierBadge tier={v.tier} />
-            </div>
+            <div className="font-medium text-ink">{vaultName(v)}</div>
             <div className="text-2xs text-ink-3 mt-0.5">
               {fmtToken(total, 1)} {v.receiptSymbol}
             </div>
@@ -104,9 +107,7 @@ function PositionRow({ id, onManage }: { id: string; onManage: () => void }) {
       </td>
       <td className="px-3 py-3.5 text-right text-ink">{fmtUsd(value, { compact: false, cents: true })}</td>
       <td className={cx('px-3 py-3.5 text-right font-medium', showBoost ? 'text-aqua' : 'text-ink')}>{fmtPct(apr)}</td>
-      <td className={cx('px-3 py-3.5 text-right', pnl >= 0 ? 'text-up' : 'text-down')}>
-        {fmtUsdSigned(pnl)} <span className="text-2xs opacity-70">{p.costBasis > 0 ? fmtPctSigned(pnl / p.costBasis) : ''}</span>
-      </td>
+      <td className="px-3 py-3.5 text-right text-up">+{fmtUsd(fees, { compact: false, cents: true })}</td>
       <td className="px-4 py-3.5 text-right">
         <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); onManage(); }}>
           Manage

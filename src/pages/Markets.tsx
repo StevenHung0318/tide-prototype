@@ -1,8 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
-import { VAULTS, vaultName } from '@/data/vaults';
-import { CONSTANTS } from '@/lib/constants';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { VAULTS, VAULT_BY_ID, vaultName } from '@/data/vaults';
 import * as m from '@/lib/math';
 import { fmtPct, fmtUsd, cx } from '@/lib/format';
 import type { Tier, Vault } from '@/lib/types';
@@ -13,6 +12,7 @@ import { TokenPair } from '@/components/ui/TokenIcon';
 import { Button } from '@/components/ui/Button';
 import { Segmented } from '@/components/ui/Tabs';
 import { AprBreakdown } from '@/components/vault/AprBreakdown';
+import { DepositModal } from '@/components/deposit/DepositModal';
 
 type Filter = 'All' | Tier;
 
@@ -20,7 +20,8 @@ export function Markets() {
   const tvlDelta = useStore((s) => s.user.tvlDelta);
   const d = useUserDerived();
   const [filter, setFilter] = useState<Filter>('All');
-  const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const depositVault = VAULT_BY_ID[params.get('deposit') ?? ''] ?? null;
   const rows = useMemo(
     () =>
       VAULTS.filter((v) => filter === 'All' || v.tier === filter)
@@ -32,10 +33,9 @@ export function Markets() {
 
   return (
     <div className="space-y-6">
-      <StatRow cols={3}>
+      <StatRow cols={2}>
         <Stat label="Total TVL" value={fmtUsd(m.totalTvl(VAULTS, tvlDelta))} />
         <Stat label="Fees earned (24h)" value={fmtUsd(m.dailyFees(VAULTS, tvlDelta), { compact: false })} />
-        <Stat label="TIDE price" value={`$${CONSTANTS.TIDE_PRICE.toFixed(3)}`} tone="tide" />
       </StatRow>
 
       <div className="flex items-center justify-between gap-4">
@@ -66,12 +66,12 @@ export function Markets() {
           </thead>
           <tbody>
             {rows.map(({ v, tvl }) => (
-              <VaultRow key={v.id} vault={v} tvl={tvl} showMine={showMine} onDeposit={() => navigate(`/?vault=${v.id}`)} />
+              <VaultRow key={v.id} vault={v} tvl={tvl} showMine={showMine} onDeposit={() => setParams({ deposit: v.id })} />
             ))}
           </tbody>
         </table>
       </div>
-
+      <DepositModal vault={depositVault} onClose={() => setParams({})} />
     </div>
   );
 }

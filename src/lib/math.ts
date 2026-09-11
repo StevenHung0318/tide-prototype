@@ -127,6 +127,12 @@ export function lockedUsd(locks: Lock[]): number {
   return lockedTide(locks) * CONSTANTS.TIDE_PRICE;
 }
 
+/** Fees earned so far by a position: value × fee APR × time held. */
+export function feesEarned(valueUsd: number, feeApr: number, depositedAt: number, now: number): number {
+  const days = Math.max(0, (now - depositedAt) / 86_400_000);
+  return (valueUsd * feeApr * days) / 365;
+}
+
 /** 7-day earnings estimate for a position at its own boosted APR. */
 export function earnings7d(valueUsd: number, yourApr: number): number {
   return (valueUsd * yourApr * 7) / 365;
