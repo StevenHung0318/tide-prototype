@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { VAULTS, VAULT_BY_ID, vaultName } from '@/data/vaults';
+import { useNavigate } from 'react-router-dom';
+import { VAULTS, vaultName } from '@/data/vaults';
 import { CONSTANTS } from '@/lib/constants';
 import * as m from '@/lib/math';
 import { fmtPct, fmtUsd, cx } from '@/lib/format';
@@ -13,8 +13,6 @@ import { TokenPair } from '@/components/ui/TokenIcon';
 import { Button } from '@/components/ui/Button';
 import { Segmented } from '@/components/ui/Tabs';
 import { AprBreakdown } from '@/components/vault/AprBreakdown';
-import { Deposit } from '@/components/vault/DepositWithdrawPanel';
-import { Modal } from '@/components/ui/Modal';
 
 type Filter = 'All' | Tier;
 
@@ -22,11 +20,7 @@ export function Markets() {
   const tvlDelta = useStore((s) => s.user.tvlDelta);
   const d = useUserDerived();
   const [filter, setFilter] = useState<Filter>('All');
-  const [params, setParams] = useSearchParams();
-  const depositId = params.get('deposit');
-  const depositVault = depositId ? VAULT_BY_ID[depositId] : undefined;
-  const openDeposit = (id: string) => setParams({ deposit: id });
-  const closeDeposit = () => setParams({});
+  const navigate = useNavigate();
   const rows = useMemo(
     () =>
       VAULTS.filter((v) => filter === 'All' || v.tier === filter)
@@ -72,19 +66,12 @@ export function Markets() {
           </thead>
           <tbody>
             {rows.map(({ v, tvl }) => (
-              <VaultRow key={v.id} vault={v} tvl={tvl} showMine={showMine} onDeposit={() => openDeposit(v.id)} />
+              <VaultRow key={v.id} vault={v} tvl={tvl} showMine={showMine} onDeposit={() => navigate(`/?vault=${v.id}`)} />
             ))}
           </tbody>
         </table>
       </div>
 
-      <Modal open={!!depositVault} onClose={closeDeposit} title={depositVault ? `Deposit · ${vaultName(depositVault)}` : ''}>
-        {depositVault && (
-          <div className="text-ink">
-            <Deposit key={depositVault.id} vault={depositVault} autoFocus onDone={closeDeposit} />
-          </div>
-        )}
-      </Modal>
     </div>
   );
 }

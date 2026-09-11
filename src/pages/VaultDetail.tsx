@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { VAULT_BY_ID, TIER_CAPACITY, vaultName } from '@/data/vaults';
 import * as m from '@/lib/math';
 import { fmtPct, fmtUsd, cx } from '@/lib/format';
@@ -10,11 +10,10 @@ import { Stat, StatRow } from '@/components/ui/Stat';
 import { PriceRange } from '@/components/vault/PriceRange';
 import { AprBreakdown } from '@/components/vault/AprBreakdown';
 import { NavChart } from '@/components/vault/NavChart';
-import { DepositWithdrawPanel } from '@/components/vault/DepositWithdrawPanel';
+import { Button } from '@/components/ui/Button';
 
 export function VaultDetail() {
   const { id = '' } = useParams();
-  const [params] = useSearchParams();
   const v = VAULT_BY_ID[id];
   const market = useMarketStatus();
   if (!v) {
@@ -24,10 +23,10 @@ export function VaultDetail() {
       </div>
     );
   }
-  return <VaultView vaultId={v.id} market={market} action={params.get('action')} />;
+  return <VaultView vaultId={v.id} market={market} />;
 }
 
-function VaultView({ vaultId, market, action }: { vaultId: string; market: 'open' | 'closed'; action: string | null }) {
+function VaultView({ vaultId, market }: { vaultId: string; market: 'open' | 'closed' }) {
   const v = VAULT_BY_ID[vaultId];
   const { tvl, breakdown: b, showBoost } = useVaultApr(v);
   const status = m.rangeStatus(v, market);
@@ -36,13 +35,14 @@ function VaultView({ vaultId, market, action }: { vaultId: string; market: 'open
   const [aprHover, setAprHover] = useState(false);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-[960px] mx-auto">
       <header className="flex flex-wrap items-center gap-3">
-        <Link to="/" className="text-xs text-ink-3 hover:text-ink-2 mr-1">← Markets</Link>
+        <Link to="/explore" className="text-xs text-ink-3 hover:text-ink-2 mr-1">← Explore</Link>
         <TokenPair a={v.token0} b={v.token1} size={28} />
         <h1 className="display text-2xl font-semibold">{vaultName(v)}</h1>
         <TierBadge tier={v.tier} />
         <RangeStatusBadge status={status} />
+        <Link to={`/?vault=${v.id}`} className="ml-auto"><Button>Deposit</Button></Link>
       </header>
 
       <StatRow cols={3}>
@@ -76,15 +76,8 @@ function VaultView({ vaultId, market, action }: { vaultId: string; market: 'open
         </div>
       </StatRow>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <div className="lg:col-span-2 space-y-6 min-w-0">
-          <PriceRange vault={v} market={market} />
-          <NavChart vault={v} />
-        </div>
-        <div className="lg:sticky lg:top-[72px]">
-          <DepositWithdrawPanel vault={v} initialTab={action === 'withdraw' ? 'withdraw' : 'deposit'} autoFocus={action === 'deposit'} />
-        </div>
-      </div>
+      <PriceRange vault={v} market={market} />
+      <NavChart vault={v} />
     </div>
   );
 }

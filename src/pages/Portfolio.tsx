@@ -27,7 +27,7 @@ export function Portfolio() {
     return (
       <div className="space-y-6">
         <Summary />
-        <EmptyState title="No positions yet" action={<Link to="/"><Button>Explore vaults</Button></Link>} />
+        <EmptyState title="No positions yet" action={<Link to="/explore"><Button>Explore vaults</Button></Link>} />
       </div>
     );
   }

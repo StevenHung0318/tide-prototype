@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
+import { Home } from '@/pages/Home';
 import { Markets } from '@/pages/Markets';
 import { VaultDetail } from '@/pages/VaultDetail';
 import { Portfolio } from '@/pages/Portfolio';
@@ -12,13 +13,14 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/" element={<Markets />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/explore" element={<Markets />} />
           <Route path="/vault/:id" element={<VaultDetail />} />
           <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/rewards" element={<Rewards />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/flywheel" element={<Navigate to="/analytics" replace />} />
-          <Route path="*" element={<Markets />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>
