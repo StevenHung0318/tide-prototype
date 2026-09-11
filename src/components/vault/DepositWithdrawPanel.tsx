@@ -38,7 +38,7 @@ export function DepositWithdrawPanel({ vault: v, initialTab = 'deposit', autoFoc
 
 // ───────────────────────── Deposit ─────────────────────────
 
-function Deposit({ vault: v, autoFocus }: { vault: Vault; autoFocus?: boolean }) {
+export function Deposit({ vault: v, autoFocus, onDone }: { vault: Vault; autoFocus?: boolean; onDone?: () => void }) {
   const connected = useStore((s) => s.connected);
   const connect = useStore((s) => s.connect);
   const balances = useStore((s) => s.user.balances);
@@ -92,6 +92,7 @@ function Deposit({ vault: v, autoFocus }: { vault: Vault; autoFocus?: boolean })
     setAmount1('');
     const what = isDual ? `${fmtToken(amt)} ${v.token0} + ${fmtToken(amt1)} ${v.token1}` : `${fmtToken(amt)} ${asset}`;
     pushToast({ title: `Deposited ${what}${stake ? ' · Earning TIDE' : ''}`, detail: `Received ${fmtToken(preview.tdlp, 1)} ${v.receiptSymbol}`, tone: stake ? 'tide' : 'default' });
+    onDone?.();
   };
 
   const onSubmit = () => {

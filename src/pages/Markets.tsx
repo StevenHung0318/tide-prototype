@@ -1,19 +1,20 @@
 import { useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useNavigate } from 'react-router-dom';
-import { VAULTS, vaultName } from '@/data/vaults';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { VAULTS, VAULT_BY_ID, vaultName } from '@/data/vaults';
 import { CONSTANTS } from '@/lib/constants';
 import * as m from '@/lib/math';
 import { fmtPct, fmtUsd, cx } from '@/lib/format';
 import type { Tier, Vault } from '@/lib/types';
 import { useStore } from '@/store/useStore';
-import { useMarketStatus, useUserDerived, useVaultApr } from '@/store/selectors';
+import { useUserDerived, useVaultApr } from '@/store/selectors';
 import { Stat, StatRow } from '@/components/ui/Stat';
-import { RangeStatusBadge, TierBadge } from '@/components/ui/Badge';
 import { TokenPair } from '@/components/ui/TokenIcon';
 import { Button } from '@/components/ui/Button';
 import { Segmented } from '@/components/ui/Tabs';
 import { AprBreakdown } from '@/components/vault/AprBreakdown';
+import { Deposit } from '@/components/vault/DepositWithdrawPanel';
+import { Modal } from '@/components/ui/Modal';
 
 type Filter = 'All' | Tier;
 
@@ -21,6 +22,11 @@ export function Markets() {
   const tvlDelta = useStore((s) => s.user.tvlDelta);
   const d = useUserDerived();
   const [filter, setFilter] = useState<Filter>('All');
+  const [params, setParams] = useSearchParams();
+  const depositId = params.get('deposit');
+  const depositVault = depositId ? VAULT_BY_ID[depositId] : undefined;
+  const openDeposit = (id: string) => setParams({ deposit: id });
+  const closeDeposit = () => setParams({});
   const rows = useMemo(
     () =>
       VAULTS.filter((v) => filter === 'All' || v.tier === filter)
@@ -58,28 +64,33 @@ export function Markets() {
           <thead>
             <tr className="text-xs text-ink-3 border-b border-line">
               <th className="text-left font-medium px-4 h-10">Pool</th>
-              <th className="text-right font-medium px-3 h-10 w-[14%]">TVL</th>
-              <th className="text-right font-medium px-3 h-10 w-[14%]">APR</th>
-              <th className="text-left font-medium px-3 h-10 pl-8 w-[18%]">Status</th>
-              {showMine && <th className="text-right font-medium px-3 h-10 w-[14%]">My deposit</th>}
-              <th className="px-4 h-10 w-[12%]" />
+              <th className="text-right font-medium px-3 h-10 w-[18%]">TVL</th>
+              <th className="text-right font-medium px-3 h-10 w-[18%]">APR</th>
+              {showMine && <th className="text-right font-medium px-3 h-10 w-[18%]">My deposit</th>}
+              <th className="px-4 h-10 w-[14%]" />
             </tr>
           </thead>
           <tbody>
             {rows.map(({ v, tvl }) => (
-              <VaultRow key={v.id} vault={v} tvl={tvl} showMine={showMine} />
+              <VaultRow key={v.id} vault={v} tvl={tvl} showMine={showMine} onDeposit={() => openDeposit(v.id)} />
             ))}
           </tbody>
         </table>
       </div>
+
+      <Modal open={!!depositVault} onClose={closeDeposit} title={depositVault ? `Deposit · ${vaultName(depositVault)}` : ''}>
+        {depositVault && (
+          <div className="text-ink">
+            <Deposit key={depositVault.id} vault={depositVault} autoFocus onDone={closeDeposit} />
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
 
-function VaultRow({ vault: v, tvl, showMine }: { vault: Vault; tvl: number; showMine: boolean }) {
+function VaultRow({ vault: v, tvl, showMine, onDeposit }: { vault: Vault; tvl: number; showMine: boolean; onDeposit: () => void }) {
   const navigate = useNavigate();
-  const market = useMarketStatus();
-  const status = m.rangeStatus(v, market);
   const { breakdown: b, showBoost } = useVaultApr(v);
   const position = useStore((s) => s.user.positions[v.id]);
   const [hover, setHover] = useState(false);
@@ -100,7 +111,6 @@ function VaultRow({ vault: v, tvl, showMine }: { vault: Vault; tvl: number; show
         <div className="flex items-center gap-3">
           <TokenPair a={v.token0} b={v.token1} />
           <span className="font-medium text-ink">{vaultName(v)}</span>
-          <TierBadge tier={v.tier} />
         </div>
       </td>
       <td className="px-3 py-3.5 text-right text-ink">{fmtUsd(tvl)}</td>
@@ -119,20 +129,15 @@ function VaultRow({ vault: v, tvl, showMine }: { vault: Vault; tvl: number; show
             document.body,
           )}
       </td>
-      <td className="px-3 py-3.5 pl-8">
-        <RangeStatusBadge status={status} />
-      </td>
       {showMine && (
         <td className="px-3 py-3.5 text-right">
           {position ? <span className="text-ink">{fmtUsd(m.positionValue(position, v), { compact: false })}</span> : <span className="text-ink-3">—</span>}
         </td>
       )}
       <td className="px-4 py-3.5 text-right">
-        <Link to={`/vault/${v.id}?action=deposit`} onClick={(e) => e.stopPropagation()}>
-          <Button size="sm" variant={v.tier === 'Degen' ? 'secondary' : 'primary'}>
-            Deposit
-          </Button>
-        </Link>
+        <Button size="sm" variant={v.tier === 'Degen' ? 'secondary' : 'primary'} onClick={(e) => { e.stopPropagation(); onDeposit(); }}>
+          Deposit
+        </Button>
       </td>
     </tr>
   );

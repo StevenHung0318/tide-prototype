@@ -9,7 +9,7 @@ const NAV = [
   { to: '/', label: 'Markets' },
   { to: '/portfolio', label: 'Portfolio' },
   { to: '/rewards', label: 'Rewards' },
-  { to: '/flywheel', label: 'Flywheel' },
+  { to: '/analytics', label: 'Analytics' },
 ];
 
 export function Header() {

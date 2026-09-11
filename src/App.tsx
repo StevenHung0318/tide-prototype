@@ -4,7 +4,8 @@ import { Markets } from '@/pages/Markets';
 import { VaultDetail } from '@/pages/VaultDetail';
 import { Portfolio } from '@/pages/Portfolio';
 import { Rewards } from '@/pages/Rewards';
-import { Flywheel } from '@/pages/Flywheel';
+import { Navigate } from 'react-router-dom';
+import { Analytics } from '@/pages/Analytics';
 
 export default function App() {
   return (
@@ -15,7 +16,8 @@ export default function App() {
           <Route path="/vault/:id" element={<VaultDetail />} />
           <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/rewards" element={<Rewards />} />
-          <Route path="/flywheel" element={<Flywheel />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/flywheel" element={<Navigate to="/analytics" replace />} />
           <Route path="*" element={<Markets />} />
         </Route>
       </Routes>
