@@ -1,15 +1,12 @@
+import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { VAULT_BY_ID, TIER_CAPACITY, vaultName } from '@/data/vaults';
-import { CONSTANTS } from '@/lib/constants';
 import * as m from '@/lib/math';
 import { fmtPct, fmtUsd, cx } from '@/lib/format';
 import { useMarketStatus, useVaultApr } from '@/store/selectors';
 import { RangeStatusBadge, TierBadge } from '@/components/ui/Badge';
 import { TokenPair } from '@/components/ui/TokenIcon';
 import { Stat, StatRow } from '@/components/ui/Stat';
-import { Card } from '@/components/ui/Card';
-import { Collapsible } from '@/components/ui/Collapsible';
-import { KV } from '@/components/ui/KeyValue';
 import { PriceRange } from '@/components/vault/PriceRange';
 import { AprBreakdown } from '@/components/vault/AprBreakdown';
 import { NavChart } from '@/components/vault/NavChart';
@@ -36,7 +33,7 @@ function VaultView({ vaultId, market, action }: { vaultId: string; market: 'open
   const status = m.rangeStatus(v, market);
   const cap = TIER_CAPACITY[v.tier];
   const fill = Math.min(1, tvl / cap);
-  const strategy = v.tier === 'Core' ? 'Market-hours aware range' : v.tier === 'Turbo' ? 'Tight range, hourly checks' : 'Narrow, high-frequency range';
+  const [aprHover, setAprHover] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -50,7 +47,24 @@ function VaultView({ vaultId, market, action }: { vaultId: string; market: 'open
 
       <StatRow cols={3}>
         <Stat label="TVL" value={fmtUsd(tvl)} />
-        <Stat label={showBoost ? 'Your APR' : 'APR'} value={fmtPct(showBoost ? b.yourApr : b.totalApr)} tone={showBoost ? 'aqua' : 'default'} />
+        <div className="relative cursor-help" onMouseEnter={() => setAprHover(true)} onMouseLeave={() => setAprHover(false)}>
+          <Stat
+            label={showBoost ? 'Your APR' : 'APR'}
+            value={fmtPct(showBoost ? b.yourApr : b.totalApr)}
+            tone={showBoost ? 'aqua' : 'default'}
+            sub={
+              <>
+                {fmtPct(b.feeApr)} fees + <span className="text-tide">{fmtPct(showBoost ? b.yourTideApr : b.baseTideApr)} TIDE</span>
+                {showBoost && <span className="text-ink-3"> · ×{b.boost.toFixed(2).replace(/\.?0+$/, '')} boost</span>}
+              </>
+            }
+          />
+          {aprHover && (
+            <div className="absolute left-0 top-full mt-1 z-40 w-72 bg-panel-2 border border-line-2 rounded-md shadow-pop p-3 animate-fade-in">
+              <AprBreakdown vault={v} compact />
+            </div>
+          )}
+        </div>
         <div className="flex flex-col gap-1 min-w-0">
           <div className="text-xs text-ink-3">Capacity</div>
           <div className="display num text-xl font-semibold truncate">
@@ -66,26 +80,6 @@ function VaultView({ vaultId, market, action }: { vaultId: string; market: 'open
         <div className="lg:col-span-2 space-y-6 min-w-0">
           <PriceRange vault={v} market={market} />
           <NavChart vault={v} />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            <Card title="APR breakdown">
-              <AprBreakdown vault={v} />
-            </Card>
-            <Collapsible title="How it works">
-              <KV
-                rows={[
-                  { k: 'Strategy', v: strategy },
-                  { k: 'Range', v: `±${Math.round(v.rangeWidthPct * 100)}%` },
-                  { k: 'Rebalances (30d)', v: String(v.rebalances30d) },
-                  { k: 'Performance fee', v: fmtPct(CONSTANTS.PERFORMANCE_FEE, 0) },
-                  { k: 'Withdrawal fee', v: fmtPct(CONSTANTS.WITHDRAWAL_FEE) },
-                  { k: `${v.receiptSymbol} price`, v: `$${v.pricePerShare.toFixed(4)}` },
-                ]}
-              />
-              <p className="mt-3 text-xs text-ink-3">
-                Your deposit mints {v.receiptSymbol}, a token that grows in value as the vault earns. Stake it to mine TIDE. Redeem it anytime.
-              </p>
-            </Collapsible>
-          </div>
         </div>
         <div className="lg:sticky lg:top-[72px]">
           <DepositWithdrawPanel vault={v} initialTab={action === 'withdraw' ? 'withdraw' : 'deposit'} autoFocus={action === 'deposit'} />

@@ -172,6 +172,9 @@ function Deposit({ vault: v, autoFocus }: { vault: Vault; autoFocus?: boolean })
       <Button block size="lg" onClick={onSubmit} disabled={connected && !canSubmit} loading={busy}>
         {busy ? 'Confirming…' : ctaLabel}
       </Button>
+      <div className="text-2xs text-ink-3 text-center num">
+        {fmtPct(CONSTANTS.PERFORMANCE_FEE, 0)} fee on earnings · {fmtPct(CONSTANTS.WITHDRAWAL_FEE)} on withdrawal · Redeem anytime
+      </div>
 
       <Modal
         open={degenOpen}
