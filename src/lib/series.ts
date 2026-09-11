@@ -105,3 +105,24 @@ export function emissionsSeries(emissionsEnd: number, buybackEnd: number, weeks 
   }
   return out;
 }
+
+export interface PricePoint {
+  t: number; // epoch ms
+  price: number;
+}
+
+/**
+ * 7-day price path ending exactly at `end`. Starts near `center` so the path
+ * reads as "mostly inside the range" for in-range vaults and "drifted out"
+ * for out-of-range ones. 2-hour resolution.
+ */
+export function priceSeries(vaultId: string, center: number, end: number, widthPct: number, now = new Date()): PricePoint[] {
+  const points = 85; // 7d × 12 + 1
+  const seed = hashSeed(`${vaultId}-price`);
+  const rnd = mulberry32(seed);
+  const start = center * (1 + (rnd() - 0.5) * widthPct * 0.6);
+  const path = smoothPath(seed ^ 0x51ed270b, points, start, end, widthPct * 0.045);
+  const stepMs = (7 * 86_400_000) / (points - 1);
+  const t0 = now.getTime() - 7 * 86_400_000;
+  return path.map((price, i) => ({ t: t0 + i * stepMs, price }));
+}
