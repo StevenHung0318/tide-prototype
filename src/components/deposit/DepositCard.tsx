@@ -6,7 +6,7 @@ import { CONSTANTS } from '@/lib/constants';
 import * as m from '@/lib/math';
 import { useStore } from '@/store/useStore';
 import { useUserDerived, useVaultApr } from '@/store/selectors';
-import { cx, fmtPct, fmtPctSigned, fmtToken, fmtUsd, fmtUsdSigned } from '@/lib/format';
+import { cx, fmtPct, fmtToken, fmtUsd } from '@/lib/format';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { TokenIcon, TokenPair } from '@/components/ui/TokenIcon';
@@ -26,9 +26,10 @@ export function DepositCard({ vault: v, onVaultChange, initialAmount }: Props) {
   const [tab, setTab] = useState<Tab>('deposit');
   const [pick, setPick] = useState(false);
   const connected = useStore((s) => s.connected);
+  const balances = useStore((s) => s.user.balances);
   const position = useStore((s) => s.user.positions[v.id]);
   const value = m.positionValue(position, v);
-  const pnl = position ? value - position.costBasis : 0;
+  const walletTokens = Array.from(new Set(['USDC', v.token0, v.token1]));
 
   return (
     <div className="w-full max-w-[440px] mx-auto">
@@ -48,12 +49,16 @@ export function DepositCard({ vault: v, onVaultChange, initialAmount }: Props) {
           <Link to={`/vault/${v.id}`} className="text-xs text-ink-3 hover:text-ink-2">View vault →</Link>
         </div>
 
-        {connected && position && (
-          <div className="flex items-center justify-between rounded bg-deep px-3 h-10 text-xs num">
-            <span className="text-ink-3">Your position</span>
-            <span className="text-ink">
-              {fmtUsd(value, { compact: false, cents: true })}
-              <span className={cx('ml-2', pnl >= 0 ? 'text-up' : 'text-down')}>{fmtUsdSigned(pnl)}{position.costBasis > 0 ? ` (${fmtPctSigned(pnl / position.costBasis)})` : ''}</span>
+        {connected && (
+          <div className="flex items-center justify-between gap-3 rounded bg-deep px-3 h-10 text-xs num">
+            <span className="text-ink-3 shrink-0">Wallet</span>
+            <span className="text-ink-2 truncate">
+              {walletTokens.map((t, i) => (
+                <span key={t}>
+                  {i > 0 && <span className="text-ink-3"> · </span>}
+                  <span className="text-ink">{fmtToken(balances[t] ?? 0)}</span> {t}
+                </span>
+              ))}
             </span>
           </div>
         )}
@@ -62,6 +67,13 @@ export function DepositCard({ vault: v, onVaultChange, initialAmount }: Props) {
           <DepositForm key={v.id} vault={v} onPick={() => setPick(true)} initialAmount={initialAmount} />
         ) : (
           <WithdrawForm key={v.id} vault={v} onPick={() => setPick(true)} />
+        )}
+
+        {connected && position && (
+          <Link to="/portfolio" className="flex items-center justify-between rounded border border-line hover:border-line-2 px-3 h-10 text-xs num transition-colors">
+            <span className="text-ink-2">You have <span className="text-ink">{fmtUsd(value, { compact: false })}</span> in this vault</span>
+            <span className="text-aqua font-medium">View my position →</span>
+          </Link>
         )}
       </div>
       <VaultSelect open={pick} onClose={() => setPick(false)} onSelect={onVaultChange} selectedId={v.id} />
@@ -254,14 +266,17 @@ function DepositForm({ vault: v, onPick, initialAmount }: { vault: Vault; onPick
         )}
       </Field>
 
-      <Field label="You'll earn">
+      <Field label="You receive">
         <div className="rounded-md bg-deep border border-line px-3 py-2.5 num">
-          <div className="flex items-baseline justify-between">
-            <span className={cx('display text-2xl font-semibold', preview ? 'text-up' : 'text-ink-3')}>{preview ? `~${fmtUsd(monthly, { compact: false, cents: monthly < 100 })}` : '~$0'} <span className="text-sm font-normal text-ink-2">/ month</span></span>
-            <span className={cx('text-sm', showBoost ? 'text-aqua' : 'text-ink-2')}>at {fmtPct(apr)} APR</span>
+          <div className="flex items-baseline justify-between gap-3">
+            <span className={cx('display text-2xl font-semibold truncate', preview ? 'text-ink' : 'text-ink-3')}>
+              {preview ? fmtToken(preview.tdlp, 1) : '0'} <span className="text-sm font-normal text-ink-2">{v.receiptSymbol}</span>
+            </span>
+            {preview && <span className="text-xs text-ink-3 shrink-0">≈ {fmtUsd(preview.netUsd, { compact: false, cents: true })}</span>}
           </div>
-          <div className="text-xs text-ink-3 mt-1">
-            {preview ? `${fmtToken(preview.tdlp, 1)} ${v.receiptSymbol} · ${fmtUsd(preview.netUsd, { compact: false })} deposited` : `Paid in fees and TIDE. Compounds daily.`}
+          <div className="flex items-center justify-between mt-1.5 text-xs">
+            <span className={preview ? 'text-up' : 'text-ink-3'}>{preview ? `Earning ~${fmtUsd(monthly, { compact: false, cents: monthly < 100 })} / month` : 'Earning'}</span>
+            <span className={showBoost ? 'text-aqua' : 'text-ink-2'}>at {fmtPct(apr)} APR</span>
           </div>
           {connected && d.lockedTide > 0 && preview && Math.abs(boostAfter - d.boost) > 0.0005 && (
             <div className="text-xs text-tide mt-1">Boost ×{d.boost.toFixed(2)} → ×{boostAfter.toFixed(2)} after this deposit</div>
