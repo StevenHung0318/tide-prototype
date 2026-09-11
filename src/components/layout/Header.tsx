@@ -1,6 +1,5 @@
 import { useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { MarketBadge } from './MarketBadge';
 import { WalletButton } from './WalletButton';
 import { useStore } from '@/store/useStore';
 import { cx } from '@/lib/format';
@@ -56,7 +55,6 @@ export function Header() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2 shrink-0">
-          <MarketBadge />
           <WalletButton />
         </div>
       </div>

@@ -9,7 +9,6 @@ import { cx, fmtPct, fmtToken, fmtUsd } from '@/lib/format';
 import { Button } from '@/components/ui/Button';
 import { UnderlineTabs } from '@/components/ui/Tabs';
 import { AmountInput } from '@/components/ui/AmountInput';
-import { Toggle } from '@/components/ui/Toggle';
 import { Modal } from '@/components/ui/Modal';
 import { TokenIcon } from '@/components/ui/TokenIcon';
 
@@ -54,7 +53,7 @@ export function Deposit({ vault: v, autoFocus, onDone }: { vault: Vault; autoFoc
   const [asset, setAsset] = useState<string>('USDC');
   const [amount, setAmount] = useState('');
   const [amount1, setAmount1] = useState('');
-  const [stake, setStake] = useState(true);
+  const stake = true; // every depositor earns TIDE
   const [busy, setBusy] = useState(false);
   const [degenOpen, setDegenOpen] = useState(false);
   const [ack, setAck] = useState(false);
@@ -91,7 +90,7 @@ export function Deposit({ vault: v, autoFocus, onDone }: { vault: Vault; autoFoc
     setAmount('');
     setAmount1('');
     const what = isDual ? `${fmtToken(amt)} ${v.token0} + ${fmtToken(amt1)} ${v.token1}` : `${fmtToken(amt)} ${asset}`;
-    pushToast({ title: `Deposited ${what}${stake ? ' · Earning TIDE' : ''}`, detail: `Received ${fmtToken(preview.tdlp, 1)} ${v.receiptSymbol}`, tone: stake ? 'tide' : 'default' });
+    pushToast({ title: `Deposited ${what}`, detail: `Received ${fmtToken(preview.tdlp, 1)} ${v.receiptSymbol} · earning TIDE`, tone: 'tide' });
     onDone?.();
   };
 
@@ -165,10 +164,6 @@ export function Deposit({ vault: v, autoFocus, onDone }: { vault: Vault; autoFoc
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-3 rounded border border-line px-3 h-11">
-        <span className="text-sm font-medium text-ink">Stake to earn TIDE</span>
-        <Toggle checked={stake} onChange={setStake} label="Stake to earn TIDE" tone="tide" />
-      </div>
 
       <Button block size="lg" onClick={onSubmit} disabled={connected && !canSubmit} loading={busy}>
         {busy ? 'Confirming…' : ctaLabel}
@@ -219,7 +214,6 @@ function Withdraw({ vault: v }: { vault: Vault }) {
   const amt = Number(amount) || 0;
   const preview = amt > 0 ? m.withdrawPreview(v, amt, mode, TOKEN_PRICES) : null;
   const insufficient = connected && amt > total + 1e-9;
-  const touchesStaked = !!position && amt > position.unstaked + 1e-9;
 
   const submit = async () => {
     if (!connected) return connect();
@@ -284,7 +278,7 @@ function Withdraw({ vault: v }: { vault: Vault }) {
         </div>
       )}
       <Button block size="lg" variant="secondary" onClick={submit} disabled={connected && (!preview || insufficient)} loading={busy}>
-        {busy ? 'Confirming…' : !connected ? 'Connect wallet' : touchesStaked ? 'Unstake & withdraw' : 'Withdraw'}
+        {busy ? 'Confirming…' : !connected ? 'Connect wallet' : 'Withdraw'}
       </Button>
     </div>
   );
@@ -295,21 +289,11 @@ function Withdraw({ vault: v }: { vault: Vault }) {
 function PositionSummary({ vault: v }: { vault: Vault }) {
   const connected = useStore((s) => s.connected);
   const position = useStore((s) => s.user.positions[v.id]);
-  const stakeAll = useStore((s) => s.stakeAll);
-  const pushToast = useStore((s) => s.pushToast);
   const { breakdown: b, showBoost } = useVaultApr(v);
-  const [busy, setBusy] = useState(false);
   if (!connected || !position) return null;
   const total = m.positionTdlp(position);
   const value = m.positionValue(position, v);
   const apr = showBoost ? b.yourApr : b.totalApr;
-  const onStake = async () => {
-    setBusy(true);
-    await new Promise((r) => setTimeout(r, TX_DELAY));
-    stakeAll(v.id);
-    setBusy(false);
-    pushToast({ title: `Staked ${fmtToken(position.unstaked, 1)} ${v.receiptSymbol}`, detail: 'Now mining TIDE', tone: 'tide' });
-  };
   return (
     <div className="border-t border-line p-4 text-sm num animate-fade-in">
       <div className="text-xs text-ink-3 mb-2">Your position</div>
@@ -317,19 +301,7 @@ function PositionSummary({ vault: v }: { vault: Vault }) {
         <span className="text-ink font-semibold">{fmtToken(total, 1)} {v.receiptSymbol}</span>
         <span className="text-ink">{fmtUsd(value, { compact: false, cents: true })}</span>
       </div>
-      <div className="mt-1 flex items-center justify-between text-xs">
-        <span className="text-ink-3">
-          {position.staked > 0 && <span className="text-tide">{fmtToken(position.staked, 1)} staked</span>}
-          {position.staked > 0 && position.unstaked > 0 && ' · '}
-          {position.unstaked > 0 && <span>{fmtToken(position.unstaked, 1)} unstaked</span>}
-        </span>
-        <span className="text-ink-2">Your APR {fmtPct(apr)}</span>
-      </div>
-      {position.unstaked > 0 && (
-        <Button size="sm" variant="tide" className="mt-3" block onClick={onStake} loading={busy}>
-          Stake {fmtToken(position.unstaked, 1)} {v.receiptSymbol} to earn TIDE
-        </Button>
-      )}
+      <div className="mt-1 text-xs text-ink-2 text-right">Your APR {fmtPct(apr)}</div>
     </div>
   );
 }

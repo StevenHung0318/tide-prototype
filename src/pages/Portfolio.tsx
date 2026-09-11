@@ -98,7 +98,6 @@ function PositionRow({ id, onManage }: { id: string; onManage: () => void }) {
             </div>
             <div className="text-2xs text-ink-3 mt-0.5">
               {fmtToken(total, 1)} {v.receiptSymbol}
-              {p.staked > 0 && <span className="text-tide"> · {p.unstaked > 0 ? `${fmtToken(p.staked, 1)} staked` : 'staked'}</span>}
             </div>
           </div>
         </div>

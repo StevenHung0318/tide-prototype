@@ -126,3 +126,36 @@ export function priceSeries(vaultId: string, center: number, end: number, widthP
   const t0 = now.getTime() - 7 * 86_400_000;
   return path.map((price, i) => ({ t: t0 + i * stepMs, price }));
 }
+
+/**
+ * Hourly price path for the last `days` days — an Ornstein–Uhlenbeck walk that
+ * mean-reverts toward `center` (so in-range vaults spend most of the window
+ * inside the band) and is pinned to end exactly at `end`.
+ */
+export function priceSeriesHourly(vaultId: string, center: number, end: number, widthPct: number, days = 30, now = new Date()): PricePoint[] {
+  const n = days * 24 + 1;
+  const rnd = mulberry32(hashSeed(`${vaultId}-hourly`));
+  const gauss = () => {
+    const u = 1 - rnd();
+    const v = rnd();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  };
+  const sigma = widthPct * 0.035; // hourly vol as a fraction of price
+  const theta = 0.012;
+  const raw: number[] = [center * (1 + (rnd() - 0.5) * widthPct * 0.5)];
+  for (let i = 1; i < n; i++) {
+    const x = raw[i - 1];
+    const next = x + theta * (center - x) + sigma * center * gauss();
+    raw.push(Math.max(next, center * 0.2));
+  }
+  // pin the end while keeping the shape: blend a linear shift over the last 25%.
+  const shift = end - raw[n - 1];
+  const tail = Math.floor(n * 0.25);
+  const out: number[] = raw.map((p, i) => {
+    const k = i < n - tail ? 0 : (i - (n - tail)) / (tail - 1);
+    return p + shift * k;
+  });
+  const hourMs = 3_600_000;
+  const t0 = Math.floor(now.getTime() / hourMs) * hourMs - (n - 1) * hourMs;
+  return out.map((price, i) => ({ t: t0 + i * hourMs, price }));
+}

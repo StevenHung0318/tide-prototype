@@ -161,3 +161,12 @@ describe('chart series', () => {
     for (let i = 1; i < 8; i++) expect(w[i].buybacksUsd).toBeGreaterThanOrEqual(w[i - 1].buybacksUsd * 0.95);
   });
 });
+
+describe('hourly price series', () => {
+  it('ends exactly at the current price', async () => {
+    const { priceSeriesHourly } = await import('@/lib/series');
+    const s = priceSeriesHourly('tsla-usdc', 420, 425.8, 0.18);
+    expect(s[s.length - 1].price).toBeCloseTo(425.8, 10);
+    expect(s).toHaveLength(30 * 24 + 1);
+  });
+});
