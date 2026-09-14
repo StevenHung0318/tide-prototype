@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { VAULT_BY_ID, TIER_CAPACITY, vaultName } from '@/data/vaults';
 import { fmtDate, fmtPct, fmtToken, fmtUsd, cx } from '@/lib/format';
 import * as m from '@/lib/math';
@@ -12,6 +12,11 @@ import { AprBreakdown } from '@/components/vault/AprBreakdown';
 import { NavChart } from '@/components/vault/NavChart';
 import { DepositCard } from '@/components/deposit/DepositCard';
 import type { Vault } from '@/lib/types';
+import { CONSTANTS } from '@/lib/constants';
+import { useUserDerived } from '@/store/selectors';
+import { Button } from '@/components/ui/Button';
+import { Tooltip } from '@/components/ui/Tooltip';
+import { ClaimModal } from '@/components/rewards/ClaimModal';
 
 export function VaultDetail() {
   const { id = '' } = useParams();
@@ -30,6 +35,7 @@ export function VaultDetail() {
 function VaultView({ vaultId, market }: { vaultId: string; market: 'open' | 'closed' }) {
   const v = VAULT_BY_ID[vaultId];
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
   const { tvl, breakdown: b } = useVaultApr(v);
   const cap = TIER_CAPACITY[v.tier];
   const fill = Math.min(1, tvl / cap);
@@ -78,43 +84,46 @@ function VaultView({ vaultId, market }: { vaultId: string; market: 'open' | 'clo
         <NavChart vault={v} />
         </div>
         <div className="lg:sticky lg:top-[72px] space-y-6">
-          <YourPosition vault={v} tvl={tvl} />
+          <YourPosition vault={v} tvl={tvl} onClaim={() => setParams({ claim: '1' })} />
           <DepositCard key={v.id} vault={v} onVaultChange={(nv) => navigate(`/vault/${nv.id}`)} showVaultLink={false} />
         </div>
       </div>
+      <ClaimModal open={params.get('claim') === '1'} onClose={() => setParams({})} />
     </div>
   );
 }
 
-function YourPosition({ vault: v, tvl }: { vault: Vault; tvl: number }) {
+function YourPosition({ vault: v, tvl, onClaim }: { vault: Vault; tvl: number; onClaim: () => void }) {
   const connected = useStore((s) => s.connected);
   const p = useStore((s) => s.user.positions[v.id]);
+  const d = useUserDerived();
   if (!connected || !p) return null;
   const value = m.positionValue(p, v);
   const fees = m.feesEarned(value, v.feeApr7d, p.depositedAt, Date.now());
   const b = m.aprBreakdown(v, tvl);
   return (
-    <section className="bg-panel border border-line rounded-lg p-4 max-w-[440px] mx-auto w-full">
-      <div className="flex items-center justify-between">
-        <h2 className="display text-sm font-semibold">Your position</h2>
-        <span className="text-xs text-ink-3 num">Since {fmtDate(p.depositedAt)}</span>
+    <section className="bg-panel border border-line rounded-lg p-5 max-w-[440px] mx-auto w-full">
+      <h2 className="display text-sm font-semibold">Your position</h2>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-5 mt-4 num">
+        <Big label="Value" value={fmtUsd(value, { compact: false, cents: true })} tip={`${fmtToken(m.positionTdlp(p), 1)} ${v.receiptSymbol} · deposited ${fmtDate(p.depositedAt)}`} />
+        <Big label="Your APR" value={fmtPct(b.totalApr)} tip={`${fmtPct(b.feeApr)} from fees + ${fmtPct(b.tideApr)} in TIDE`} />
+        <Big label="Fees earned" value={`+${fmtUsd(fees, { compact: false, cents: true })}`} tone="text-up" tip="Fees compound into your tdLP automatically. Nothing to claim." />
+        <Big label="TIDE rewards" value={`${fmtToken(d.pendingTide, 1)} TIDE`} tone="text-tide" tip={`≈ ${fmtUsd(d.pendingTide * CONSTANTS.TIDE_PRICE, { compact: false, cents: true })} across all your vaults`} />
       </div>
-      <div className="grid grid-cols-3 gap-4 mt-3 num">
-        <div>
-          <div className="text-xs text-ink-3">Value</div>
-          <div className="display text-xl font-semibold text-ink mt-0.5">{fmtUsd(value, { compact: false, cents: true })}</div>
-          <div className="text-xs text-ink-3">{fmtToken(m.positionTdlp(p), 1)} {v.receiptSymbol}</div>
-        </div>
-        <div>
-          <div className="text-xs text-ink-3">Fees earned</div>
-          <div className="display text-xl font-semibold text-up mt-0.5">+{fmtUsd(fees, { compact: false, cents: true })}</div>
-        </div>
-        <div>
-          <div className="text-xs text-ink-3">Your APR</div>
-          <div className="display text-xl font-semibold text-ink mt-0.5">{fmtPct(b.totalApr)}</div>
-          <div className="text-xs text-ink-3">{fmtPct(b.feeApr)} fees + <span className="text-tide">{fmtPct(b.tideApr)} TIDE</span></div>
-        </div>
-      </div>
+      <Button block variant="tide" className="mt-5" onClick={onClaim} disabled={d.pendingTide < 0.005}>
+        {d.pendingTide < 0.005 ? 'No rewards to claim yet' : `Claim ${fmtToken(d.pendingTide, 1)} TIDE`}
+      </Button>
     </section>
+  );
+}
+
+function Big({ label, value, tone, tip }: { label: string; value: string; tone?: string; tip: string }) {
+  return (
+    <Tooltip content={tip} align="start" side="bottom" wide>
+      <div className="cursor-help">
+        <div className="text-xs text-ink-3">{label}</div>
+        <div className={cx('display text-2xl font-semibold mt-1 leading-none', tone ?? 'text-ink')}>{value}</div>
+      </div>
+    </Tooltip>
   );
 }
