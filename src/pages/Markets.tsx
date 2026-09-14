@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { VAULTS, VAULT_BY_ID, vaultName } from '@/data/vaults';
 import * as m from '@/lib/math';
-import { cx, fmtMultiplier, fmtPct, fmtToken, fmtUsd } from '@/lib/format';
+import { cx, fmtPct, fmtToken, fmtUsd } from '@/lib/format';
 import { CONSTANTS } from '@/lib/constants';
 import type { Tier, Vault } from '@/lib/types';
 import { useStore } from '@/store/useStore';
@@ -42,11 +42,10 @@ export function Markets() {
   return (
     <div className="space-y-6">
       {showMine ? (
-        <StatRow>
+        <StatRow cols={3}>
           <Stat label="Your deposits" value={fmtUsd(d.depositsUsd, { compact: false })} />
           <Stat label="Fees earned" value={`+${fmtUsd(totalFees, { compact: false, cents: true })}`} tone="up" />
           <Stat label="Pending TIDE" value={`${fmtToken(d.pendingTide, 2)} TIDE`} tone="tide" sub={`${fmtUsd(d.pendingTide * CONSTANTS.TIDE_PRICE, { compact: false, cents: true })} · Claim →`} onClick={() => navigate('/rewards')} />
-          <Stat label="Boost" value={fmtMultiplier(d.boost)} tone={d.boost > 1 ? 'tide' : 'default'} />
         </StatRow>
       ) : (
         <StatRow cols={2}>
@@ -95,7 +94,7 @@ export function Markets() {
 
 function VaultRow({ vault: v, tvl, showMine, onDeposit }: { vault: Vault; tvl: number; showMine: boolean; onDeposit: () => void }) {
   const navigate = useNavigate();
-  const { breakdown: b, showBoost } = useVaultApr(v);
+  const { breakdown: b } = useVaultApr(v);
   const position = useStore((s) => s.user.positions[v.id]);
   const [hover, setHover] = useState(false);
   const aprCell = useRef<HTMLTableCellElement>(null);
@@ -119,7 +118,7 @@ function VaultRow({ vault: v, tvl, showMine, onDeposit }: { vault: Vault; tvl: n
       </td>
       <td className="px-3 py-3.5 text-right text-ink">{fmtUsd(tvl)}</td>
       <td ref={aprCell} className="px-3 py-3.5 text-right" onMouseEnter={onEnter} onMouseLeave={() => setHover(false)}>
-        <span className={cx('display text-lg font-semibold', showBoost ? 'text-aqua' : 'text-ink')}>{fmtPct(showBoost ? b.yourApr : b.totalApr)}</span>
+        <span className="display text-lg font-semibold text-ink">{fmtPct(b.totalApr)}</span>
         {hover &&
           pop &&
           createPortal(

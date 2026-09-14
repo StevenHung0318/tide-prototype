@@ -10,8 +10,8 @@ const tsla = VAULT_BY_ID['tsla-usdc'];
 function derived() {
   const s = useStore.getState();
   const deposits = m.totalDepositsUsd(s.user.positions, VAULT_BY_ID);
-  const locked = m.lockedUsd(s.user.locks);
-  return { s, deposits, locked, boost: m.boost(locked, deposits) };
+  const locked = m.lockedTide(s.user.locks) * CONSTANTS.TIDE_PRICE;
+  return { s, deposits, locked };
 }
 
 describe('store — cross-page consistency after actions (checklist §7)', () => {
@@ -20,14 +20,13 @@ describe('store — cross-page consistency after actions (checklist §7)', () =>
     await useStore.getState().connect();
   });
 
-  it('connect loads the demo user at boost ×1.5', () => {
-    const { s, boost, deposits } = derived();
+  it('connect loads the demo user', () => {
+    const { s, deposits } = derived();
     expect(s.connected).toBe(true);
     expect(deposits).toBeCloseTo(12_398, 0);
-    expect(boost).toBe(1.5);
   });
 
-  it('deposit 5,000 USDC → balance, position, vault TVL and boost all move together', () => {
+  it('deposit 5,000 USDC → balance, position and vault TVL move together', () => {
     const before = derived();
     const preview = m.zapPreview(tsla, tsla.tvl, 'USDC', 5_000, TOKEN_PRICES);
     useStore.getState().deposit({ vaultId: tsla.id, preview, stake: true, spend: [{ token: 'USDC', amount: 5_000 }] });
@@ -36,27 +35,8 @@ describe('store — cross-page consistency after actions (checklist §7)', () =>
     expect(after.s.user.positions[tsla.id].staked).toBeCloseTo(9_800 + preview.tdlp, 6);
     expect(after.deposits).toBeCloseTo(before.deposits + preview.netUsd, 4);
     expect(after.s.user.tvlDelta[tsla.id]).toBeCloseTo(preview.netUsd, 6);
-    // Ratio diluted: 1,533 / 17,392 ≈ 8.8% < 10% → boost drops below 1.5 but stays > 1
-    expect(after.boost).toBeLessThan(1.5);
-    expect(after.boost).toBeGreaterThan(1.4);
-    // Your APR everywhere derives from the same boost
-    const br = m.aprBreakdown(tsla, m.effectiveTvl(tsla, after.s.user.tvlDelta), after.boost);
-    expect(br.yourApr).toBeCloseTo(br.feeApr + br.baseTideApr * after.boost, 12);
-  });
-
-  it('lock from wallet restores full boost; lock appears in list; wallet TIDE debited', () => {
-    const preview = m.zapPreview(tsla, tsla.tvl, 'USDC', 3_000, TOKEN_PRICES);
-    useStore.getState().deposit({ vaultId: tsla.id, preview, stake: true, spend: [{ token: 'USDC', amount: 3_000 }] });
-    expect(derived().boost).toBeLessThan(1.5);
-    const mid = derived();
-    const neededTide = Math.ceil((m.lockedUsdForFullBoost(mid.deposits) - mid.locked) / CONSTANTS.TIDE_PRICE);
-    expect(neededTide).toBeLessThan(3_400); // demo wallet can cover it
-    const lock = useStore.getState().lockFromWallet(neededTide);
-    expect(lock).not.toBeNull();
-    const after = derived();
-    expect(after.boost).toBeCloseTo(1.5, 6);
-    expect(after.s.user.locks).toHaveLength(2);
-    expect(after.s.user.balances.TIDE).toBeCloseTo(3_400 - neededTide, 6);
+    const br = m.aprBreakdown(tsla, m.effectiveTvl(tsla, after.s.user.tvlDelta));
+    expect(br.totalApr).toBeCloseTo(br.feeApr + br.tideApr, 12);
   });
 
   it('claim now pays 50%, forfeits 50% into the redistribution pool (sources still sum to pool)', () => {
@@ -71,12 +51,12 @@ describe('store — cross-page consistency after actions (checklist §7)', () =>
     expect(forfeits + PROTOCOL.redistribution.fromBuybacks).toBeCloseTo(48_200 + pending * 0.5, 9);
   });
 
-  it('claim & lock locks 100% for 60 days and raises locked value', () => {
+  it('claim & lock locks 100% for 90 days and raises locked value', () => {
     const pending = useStore.getState().user.pendingTide;
     const before = derived();
     const lock = useStore.getState().claimLock();
     expect(lock?.amount).toBeCloseTo(pending, 9);
-    expect((lock!.unlockAt - lock!.lockedAt) / 86_400_000).toBe(60);
+    expect((lock!.unlockAt - lock!.lockedAt) / 86_400_000).toBe(90);
     const after = derived();
     expect(after.locked).toBeCloseTo(before.locked + pending * CONSTANTS.TIDE_PRICE, 9);
     expect(after.s.user.pendingTide).toBe(0);

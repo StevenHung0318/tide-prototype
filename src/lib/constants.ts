@@ -4,9 +4,7 @@ export const CONSTANTS = {
   PERFORMANCE_FEE: 0.1,
   WITHDRAWAL_FEE: 0.001,
   INSTANT_CLAIM_RATIO: 0.5, // instant claim receives 50%
-  LOCK_DAYS: 60,
-  BOOST_MAX: 1.5,
-  BOOST_FULL_RATIO: 0.1, // full boost when locked value >= 10% of deposit value
+  LOCK_DAYS: 90,
   WEEKLY_EMISSIONS_TIDE: 1_000_000,
   /** Prototype simplification: share of vault TVL assumed staked for TIDE. */
   STAKED_SHARE: 0.85,

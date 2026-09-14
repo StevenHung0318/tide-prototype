@@ -27,7 +27,7 @@ export function VaultDetail() {
 function VaultView({ vaultId, market }: { vaultId: string; market: 'open' | 'closed' }) {
   const v = VAULT_BY_ID[vaultId];
   const navigate = useNavigate();
-  const { tvl, breakdown: b, showBoost } = useVaultApr(v);
+  const { tvl, breakdown: b } = useVaultApr(v);
   const cap = TIER_CAPACITY[v.tier];
   const fill = Math.min(1, tvl / cap);
   const [aprHover, setAprHover] = useState(false);
@@ -46,13 +46,11 @@ function VaultView({ vaultId, market }: { vaultId: string; market: 'open' | 'clo
           <Stat label="TVL" value={fmtUsd(tvl)} />
           <div className="relative cursor-help" onMouseEnter={() => setAprHover(true)} onMouseLeave={() => setAprHover(false)}>
             <Stat
-              label={showBoost ? 'Your APR' : 'APR'}
-              value={fmtPct(showBoost ? b.yourApr : b.totalApr)}
-              tone={showBoost ? 'aqua' : 'default'}
+              label="APR"
+              value={fmtPct(b.totalApr)}
               sub={
                 <>
-                  {fmtPct(b.feeApr)} fees + <span className="text-tide">{fmtPct(showBoost ? b.yourTideApr : b.baseTideApr)} TIDE</span>
-                  {showBoost && <span className="text-ink-3"> · ×{b.boost.toFixed(2).replace(/\.?0+$/, '')} boost</span>}
+                  {fmtPct(b.feeApr)} fees + <span className="text-tide">{fmtPct(b.tideApr)} TIDE</span>
                 </>
               }
             />

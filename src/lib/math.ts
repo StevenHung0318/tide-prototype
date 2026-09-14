@@ -27,43 +27,15 @@ export function baseTideApr(v: Vault, tvl: number = v.tvl): number {
   return (vaultWeeklyEmissions(v) * CONSTANTS.TIDE_PRICE * 52) / s;
 }
 
-/** boost = 1 + 0.5 × min((locked$/deposit$) / 10%, 1). No deposits → 1.0. */
-export function boost(lockedUsd: number, depositUsd: number): number {
-  if (depositUsd <= 0 || lockedUsd <= 0) return 1;
-  const ratio = lockedUsd / depositUsd;
-  const t = Math.min(ratio / CONSTANTS.BOOST_FULL_RATIO, 1);
-  return 1 + (CONSTANTS.BOOST_MAX - 1) * t;
-}
-
-export function boostRatio(lockedUsd: number, depositUsd: number): number {
-  return depositUsd > 0 ? lockedUsd / depositUsd : 0;
-}
-
-/** Locked value needed for full boost at a given deposit value. */
-export function lockedUsdForFullBoost(depositUsd: number): number {
-  return depositUsd * CONSTANTS.BOOST_FULL_RATIO;
-}
-
 export interface AprBreakdown {
   feeApr: number;
-  baseTideApr: number;
-  boost: number;
-  yourTideApr: number;
-  totalApr: number; // fee + base TIDE (what a fresh visitor sees)
-  yourApr: number; // fee + boosted TIDE
+  tideApr: number;
+  totalApr: number; // fee + TIDE — the same for every depositor
 }
 
-export function aprBreakdown(v: Vault, tvl: number, userBoost = 1): AprBreakdown {
-  const base = baseTideApr(v, tvl);
-  const yourTide = base * userBoost;
-  return {
-    feeApr: v.feeApr7d,
-    baseTideApr: base,
-    boost: userBoost,
-    yourTideApr: yourTide,
-    totalApr: v.feeApr7d + base,
-    yourApr: v.feeApr7d + yourTide,
-  };
+export function aprBreakdown(v: Vault, tvl: number): AprBreakdown {
+  const tide = baseTideApr(v, tvl);
+  return { feeApr: v.feeApr7d, tideApr: tide, totalApr: v.feeApr7d + tide };
 }
 
 // ───────────────────────── Ranges ─────────────────────────
@@ -133,24 +105,18 @@ export function feesEarned(valueUsd: number, feeApr: number, depositedAt: number
   return (valueUsd * feeApr * days) / 365;
 }
 
-/** 7-day earnings estimate for a position at its own boosted APR. */
+/** 7-day earnings estimate for a position. */
 export function earnings7d(valueUsd: number, yourApr: number): number {
   return (valueUsd * yourApr * 7) / 365;
 }
 
-/** TIDE accrued per second across staked positions (mining only, not fees). */
-export function pendingAccrualPerSecond(
-  positions: Record<string, Position>,
-  vaults: Record<string, Vault>,
-  tvlDelta: Record<string, number>,
-  userBoost: number,
-): number {
+/** TIDE accrued per second across positions (rewards only, not fees). */
+export function pendingAccrualPerSecond(positions: Record<string, Position>, vaults: Record<string, Vault>, tvlDelta: Record<string, number>): number {
   let usdPerYear = 0;
   for (const [id, p] of Object.entries(positions)) {
     const v = vaults[id];
     if (!v) continue;
-    const stakedValue = p.staked * v.pricePerShare;
-    usdPerYear += stakedValue * baseTideApr(v, effectiveTvl(v, tvlDelta)) * userBoost;
+    usdPerYear += positionValue(p, v) * baseTideApr(v, effectiveTvl(v, tvlDelta));
   }
   return usdPerYear / CONSTANTS.TIDE_PRICE / (365 * 86_400);
 }

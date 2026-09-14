@@ -23,14 +23,11 @@ export interface UserDerived {
   pnlUsd: number;
   pnlPct: number;
   lockedTide: number;
-  lockedUsd: number;
-  ratio: number;
-  boost: number;
   pendingTide: number;
   hasPositions: boolean;
 }
 
-/** Everything personal that depends on the boost ratio — one source of truth. */
+/** Personal totals — one source of truth. */
 export function useUserDerived(): UserDerived {
   const connected = useStore((s) => s.connected);
   const user = useStore((s) => s.user);
@@ -38,7 +35,6 @@ export function useUserDerived(): UserDerived {
     const depositsUsd = m.totalDepositsUsd(user.positions, VAULT_BY_ID);
     const costBasis = m.totalCostBasis(user.positions);
     const lockedTide = m.lockedTide(user.locks);
-    const lockedUsd = m.lockedUsd(user.locks);
     const pnlUsd = depositsUsd - costBasis;
     return {
       connected,
@@ -47,9 +43,6 @@ export function useUserDerived(): UserDerived {
       pnlUsd,
       pnlPct: costBasis > 0 ? pnlUsd / costBasis : 0,
       lockedTide,
-      lockedUsd,
-      ratio: m.boostRatio(lockedUsd, depositsUsd),
-      boost: m.boost(lockedUsd, depositsUsd),
       pendingTide: user.pendingTide,
       hasPositions: Object.keys(user.positions).length > 0,
     };
@@ -58,10 +51,8 @@ export function useUserDerived(): UserDerived {
 
 export function useVaultApr(v: Vault) {
   const tvlDelta = useStore((s) => s.user.tvlDelta);
-  const d = useUserDerived();
   const tvl = m.effectiveTvl(v, tvlDelta);
-  const userBoost = d.connected ? d.boost : 1;
-  return { tvl, breakdown: m.aprBreakdown(v, tvl, userBoost), showBoost: d.connected && d.lockedTide > 0 && d.hasPositions };
+  return { tvl, breakdown: m.aprBreakdown(v, tvl) };
 }
 
 export function useVaults() {

@@ -5,7 +5,7 @@ import { TOKEN_PRICES, vaultName } from '@/data/vaults';
 import { CONSTANTS } from '@/lib/constants';
 import * as m from '@/lib/math';
 import { useStore } from '@/store/useStore';
-import { useUserDerived, useVaultApr } from '@/store/selectors';
+import { useVaultApr } from '@/store/selectors';
 import { cx, fmtPct, fmtToken, fmtUsd } from '@/lib/format';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
@@ -69,13 +69,13 @@ export function DepositCard({ vault: v, onVaultChange, initialAmount, showVaultL
 
 // ───────────────────────── shared bits ─────────────────────────
 
-function VaultPill({ vault: v, onPick, apr, boosted }: { vault: Vault; onPick: () => void; apr: number; boosted: boolean }) {
+function VaultPill({ vault: v, onPick, apr }: { vault: Vault; onPick: () => void; apr: number }) {
   return (
     <button onClick={onPick} className="w-full flex items-center gap-3 rounded-md bg-deep border border-line hover:border-line-2 px-3 h-14 text-left transition-colors">
       <TokenPair a={v.token0} b={v.token1} size={26} />
       <span className="flex-1 min-w-0">
         <span className="block text-sm font-medium text-ink">{vaultName(v)}</span>
-        <span className={cx('block text-xs num', boosted ? 'text-aqua' : 'text-ink-2')}>{fmtPct(apr)} APR{boosted ? ' with your boost' : ''}</span>
+        <span className="block text-xs num text-ink-2">{fmtPct(apr)} APR</span>
       </span>
       <Chevron />
     </button>
@@ -182,9 +182,8 @@ function DepositForm({ vault: v, onPick, initialAmount }: { vault: Vault; onPick
   const acknowledgeDegen = useStore((s) => s.acknowledgeDegen);
   const deposit = useStore((s) => s.deposit);
   const pushToast = useStore((s) => s.pushToast);
-  const { tvl, breakdown: b, showBoost } = useVaultApr(v);
-  const d = useUserDerived();
-  const apr = showBoost ? b.yourApr : b.totalApr;
+  const { tvl, breakdown: b } = useVaultApr(v);
+  const apr = b.totalApr;
 
   const [asset, setAsset] = useState('USDC');
   const [amount, setAmount] = useState(initialAmount ?? '');
@@ -213,7 +212,6 @@ function DepositForm({ vault: v, onPick, initialAmount }: { vault: Vault; onPick
   const insufficientToken = isDual ? (amt > bal(v.token0) ? v.token0 : amt1 > bal(v.token1) ? v.token1 : null) : amt > bal(asset) ? asset : null;
   const insufficient = connected && !!insufficientToken;
   const monthly = preview ? (preview.netUsd * apr) / 12 : 0;
-  const boostAfter = connected && preview ? m.boost(d.lockedUsd, d.depositsUsd + preview.netUsd) : d.boost;
 
   const doDeposit = async () => {
     if (!preview) return;
@@ -248,7 +246,7 @@ function DepositForm({ vault: v, onPick, initialAmount }: { vault: Vault; onPick
   return (
     <div className="space-y-3">
       <Field label="Vault">
-        <VaultPill vault={v} onPick={onPick} apr={apr} boosted={showBoost} />
+        <VaultPill vault={v} onPick={onPick} apr={apr} />
       </Field>
 
       <Field label="Amount">
@@ -272,11 +270,8 @@ function DepositForm({ vault: v, onPick, initialAmount }: { vault: Vault; onPick
           </div>
           <div className="flex items-center justify-between mt-1.5 text-xs">
             <span className={preview ? 'text-up' : 'text-ink-3'}>{preview ? `Earning ~${fmtUsd(monthly, { compact: false, cents: monthly < 100 })} / month` : 'Earning'}</span>
-            <span className={showBoost ? 'text-aqua' : 'text-ink-2'}>at {fmtPct(apr)} APR</span>
+            <span className="text-ink-2">at {fmtPct(apr)} APR</span>
           </div>
-          {connected && d.lockedTide > 0 && preview && Math.abs(boostAfter - d.boost) > 0.0005 && (
-            <div className="text-xs text-tide mt-1">Boost ×{d.boost.toFixed(2)} → ×{boostAfter.toFixed(2)} after this deposit</div>
-          )}
         </div>
       </Field>
 
@@ -336,7 +331,7 @@ function WithdrawForm({ vault: v, onPick }: { vault: Vault; onPick: () => void }
   const position = useStore((s) => s.user.positions[v.id]);
   const withdraw = useStore((s) => s.withdraw);
   const pushToast = useStore((s) => s.pushToast);
-  const { breakdown: b, showBoost } = useVaultApr(v);
+  const { breakdown: b } = useVaultApr(v);
   const [amount, setAmount] = useState('');
   const [mode, setMode] = useState<'usdc' | 'both'>('usdc');
   const [busy, setBusy] = useState(false);
@@ -372,7 +367,7 @@ function WithdrawForm({ vault: v, onPick }: { vault: Vault; onPick: () => void }
   return (
     <div className="space-y-3">
       <Field label="Vault">
-        <VaultPill vault={v} onPick={onPick} apr={showBoost ? b.yourApr : b.totalApr} boosted={showBoost} />
+        <VaultPill vault={v} onPick={onPick} apr={b.totalApr} />
       </Field>
       <Field label="Amount">
         <AmountBox value={amount} onChange={setAmount} token={v.receiptSymbol} tokens={[{ id: v.receiptSymbol, label: v.receiptSymbol }]} onToken={() => {}} balance={connected ? total : undefined} connected={connected} usd={amt * v.pricePerShare} error={insufficient} />

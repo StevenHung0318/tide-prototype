@@ -27,12 +27,12 @@ State is persisted to `localStorage` under `tide-demo-v1`.
 |---|---|
 | `docs/` | PRD, mock-data spec and the build brief (source of truth) |
 | `src/lib/constants.ts` | Protocol constants (§1 of the mock-data spec) |
-| `src/lib/math.ts` | **All** derived numbers: APR, boost, ranges, zap/withdraw previews, claim split |
+| `src/lib/math.ts` | **All** derived numbers: APR, ranges, zap/withdraw previews, claim split |
 | `src/lib/market.ts` | US market clock (America/New_York, weekdays 09:30–16:00 ET, holidays ignored) |
 | `src/lib/series.ts` | Seeded NAV + emissions series |
 | `src/data/` | Vaults, protocol figures, demo user |
 | `src/store/useStore.ts` | zustand store (persisted) with deposit / withdraw / stake / claim / lock / unlock |
-| `src/store/selectors.ts` | Derived hooks — one boost value feeds Markets, Vault, Portfolio and Rewards |
+| `src/store/selectors.ts` | Derived hooks shared by Explore, Vault and Rewards |
 | `src/components/deposit/DepositCard.tsx` | The deposit / withdraw card (Explore modal and vault page) |
 | `src/components/vault/PriceRange.tsx` | Price chart with the LP range band (lightweight-charts) |
 | `src/test/` | Consistency checks against the spec anchors and after every action |
