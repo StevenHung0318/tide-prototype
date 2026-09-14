@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/Button';
 import { Segmented } from '@/components/ui/Tabs';
 import { AprBreakdown } from '@/components/vault/AprBreakdown';
 import { DepositModal } from '@/components/deposit/DepositModal';
+import { ClaimModal } from '@/components/rewards/ClaimModal';
 
 type Filter = 'All' | Tier;
 
@@ -21,9 +22,13 @@ export function Markets() {
   const tvlDelta = useStore((s) => s.user.tvlDelta);
   const d = useUserDerived();
   const [filter, setFilter] = useState<Filter>('All');
-  const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const depositVault = VAULT_BY_ID[params.get('deposit') ?? ''] ?? null;
+  const claimOpen = params.get('claim') === '1';
+  const locks = useStore((s) => s.user.locks);
+  const lockedTide = m.lockedTide(locks);
+  const nextUnlock = locks.length ? Math.min(...locks.map((l) => l.unlockAt)) : null;
+  const unlockable = locks.some((l) => m.isUnlockable(l, Date.now()));
   const rows = useMemo(
     () =>
       VAULTS.filter((v) => filter === 'All' || v.tier === filter)
@@ -42,10 +47,23 @@ export function Markets() {
   return (
     <div className="space-y-6">
       {showMine ? (
-        <StatRow cols={3}>
+        <StatRow>
           <Stat label="Your deposits" value={fmtUsd(d.depositsUsd, { compact: false })} />
           <Stat label="Fees earned" value={`+${fmtUsd(totalFees, { compact: false, cents: true })}`} tone="up" />
-          <Stat label="Pending TIDE" value={`${fmtToken(d.pendingTide, 2)} TIDE`} tone="tide" sub={`${fmtUsd(d.pendingTide * CONSTANTS.TIDE_PRICE, { compact: false, cents: true })} · Claim →`} onClick={() => navigate('/rewards')} />
+          <div className="flex items-center justify-between gap-3 min-w-0">
+            <Stat label="Pending TIDE" value={`${fmtToken(d.pendingTide, 2)} TIDE`} tone="tide" sub={fmtUsd(d.pendingTide * CONSTANTS.TIDE_PRICE, { compact: false, cents: true })} />
+            <Button size="sm" variant="tide" onClick={() => setParams({ claim: '1' })} disabled={d.pendingTide < 0.005}>Claim</Button>
+          </div>
+          <div className="flex items-center justify-between gap-3 min-w-0">
+            <Stat
+              label="Locked TIDE"
+              value={`${fmtToken(lockedTide, 0)} TIDE`}
+              sub={nextUnlock ? (unlockable ? 'Ready to unlock' : `Next unlock in ${Math.max(0, Math.ceil((nextUnlock - Date.now()) / 86_400_000))}d`) : 'Lock rewards for 100%'}
+            />
+            {locks.length > 0 && (
+              <Button size="sm" variant={unlockable ? 'tide' : 'secondary'} onClick={() => setParams({ claim: '1' })}>{unlockable ? 'Unlock' : 'View'}</Button>
+            )}
+          </div>
         </StatRow>
       ) : (
         <StatRow cols={2}>
@@ -88,6 +106,7 @@ export function Markets() {
         </table>
       </div>
       <DepositModal vault={depositVault} onClose={() => setParams({})} />
+      <ClaimModal open={claimOpen} onClose={() => setParams({})} />
     </div>
   );
 }

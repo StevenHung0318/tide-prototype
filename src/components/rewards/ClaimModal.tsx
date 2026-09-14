@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { PROTOCOL } from '@/data/protocol';
 import { CONSTANTS } from '@/lib/constants';
 import * as m from '@/lib/math';
@@ -7,46 +6,32 @@ import { cx, fmtDate, fmtInt, fmtToken, fmtUsd } from '@/lib/format';
 import { useStore } from '@/store/useStore';
 import { useUserDerived } from '@/store/selectors';
 import { Button } from '@/components/ui/Button';
-import { EmptyState } from '@/components/ui/EmptyState';
 
 const TX_DELAY = 1500;
 type Choice = 'now' | 'lock';
 
-/** Rewards — claim now or lock 90 days; your locks. */
-export function Rewards() {
-  const d = useUserDerived();
-  const connect = useStore((s) => s.connect);
-  const connecting = useStore((s) => s.connecting);
-  const locks = useStore((s) => s.user.locks);
-
-  if (!d.connected) {
-    return <EmptyState title="Connect your wallet to see your rewards" action={<Button onClick={() => connect()} loading={connecting}>Connect wallet</Button>} />;
-  }
-  const nothing = !d.hasPositions && d.pendingTide <= 0 && locks.length === 0;
-
+/** Claim pending TIDE (now at 50%, or lock 90 days for 100%) and manage locks. */
+export function ClaimModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+  if (!open) return null;
   return (
-    <div className="max-w-[560px] mx-auto space-y-4">
-      {nothing ? <EmptyState title="No rewards yet" body="Deposit into any vault to start earning TIDE." action={<Link to="/"><Button>Deposit</Button></Link>} /> : <ClaimCard />}
-      <LocksCard />
+    <div className="fixed inset-0 z-40 flex items-start justify-center p-4 pt-16 overflow-y-auto" role="dialog" aria-modal>
+      <div className="absolute inset-0 bg-deep/80" onClick={onClose} />
+      <div className="relative w-full max-w-[440px] animate-fade-in space-y-3">
+        <button onClick={onClose} className="absolute -top-8 right-0 text-xs text-ink-3 hover:text-ink" aria-label="Close">Close ✕</button>
+        <Claim onDone={onClose} />
+        <Locks />
+      </div>
     </div>
   );
 }
 
-function Section({ title, right, children, id }: { title: string; right?: React.ReactNode; children: React.ReactNode; id?: string }) {
-  return (
-    <section id={id} className="bg-panel border border-line rounded-lg p-4 space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="display text-sm font-semibold">{title}</h2>
-        {right}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-// ───────────────────────── Claim ─────────────────────────
-
-function ClaimCard() {
+function Claim({ onDone }: { onDone: () => void }) {
   const d = useUserDerived();
   const claimInstant = useStore((s) => s.claimInstant);
   const claimLock = useStore((s) => s.claimLock);
@@ -67,10 +52,15 @@ function ClaimCard() {
       if (lock) pushToast({ title: `Locked ${fmtToken(lock.amount, 1)} TIDE for 90 days`, detail: `Unlocks ${fmtDate(lock.unlockAt)}`, tone: 'tide' });
     }
     setBusy(false);
+    onDone();
   };
 
   return (
-    <Section title="Pending rewards" right={<span className="text-xs text-ink-3 num">TIDE ${CONSTANTS.TIDE_PRICE.toFixed(3)}</span>}>
+    <section className="bg-panel border border-line rounded-lg p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="display text-sm font-semibold">Pending rewards</h2>
+        <span className="text-xs text-ink-3 num">TIDE ${CONSTANTS.TIDE_PRICE.toFixed(3)}</span>
+      </div>
       <div className="display num text-3xl font-semibold text-tide leading-none">
         {fmtToken(d.pendingTide, 2)} <span className="text-lg">TIDE</span>
         <span className="text-sm text-ink-2 font-normal ml-2">≈ {fmtUsd(d.pendingTide * CONSTANTS.TIDE_PRICE, { compact: false, cents: true })}</span>
@@ -80,9 +70,9 @@ function ClaimCard() {
         <Option selected={choice === 'lock'} onSelect={() => setChoice('lock')} title="Lock 90 days" amount={split.locked} note="100% + share of forfeits" good />
       </div>
       <Button block size="lg" variant="tide" onClick={submit} disabled={empty} loading={busy}>
-        {busy ? 'Confirming…' : choice === 'now' ? `Claim ${fmtToken(split.instant, 1)} TIDE` : `Lock ${fmtToken(split.locked, 1)} TIDE`}
+        {busy ? 'Confirming…' : empty ? 'Nothing to claim yet' : choice === 'now' ? `Claim ${fmtToken(split.instant, 1)} TIDE` : `Lock ${fmtToken(split.locked, 1)} TIDE`}
       </Button>
-    </Section>
+    </section>
   );
 }
 
@@ -96,9 +86,7 @@ function Option({ selected, onSelect, title, amount, note, good }: { selected: b
   );
 }
 
-// ───────────────────────── Locks ─────────────────────────
-
-function LocksCard() {
+function Locks() {
   const locks = useStore((s) => s.user.locks);
   const unlock = useStore((s) => s.unlock);
   const pushToast = useStore((s) => s.pushToast);
@@ -117,7 +105,11 @@ function LocksCard() {
   };
 
   return (
-    <Section title="Locked TIDE" right={<span className="text-xs num text-tide">{fmtToken(total, 0)} TIDE</span>}>
+    <section className="bg-panel border border-line rounded-lg p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="display text-sm font-semibold">Locked TIDE</h2>
+        <span className="text-xs num text-tide">{fmtToken(total, 0)} TIDE</span>
+      </div>
       {locks.length === 0 ? (
         <div className="text-xs text-ink-3">Nothing locked yet.</div>
       ) : (
@@ -147,6 +139,6 @@ function LocksCard() {
         </ul>
       )}
       <div className="text-2xs text-ink-3 num">Lockers share this week's pool of {fmtInt(pool)} TIDE from forfeits and buybacks.</div>
-    </Section>
+    </section>
   );
 }

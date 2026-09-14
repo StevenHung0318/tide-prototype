@@ -18,6 +18,7 @@ npm run build      # tsc + vite build
 | Reset demo state | Click the **Tide** logo 5 times within 2.5 s |
 | Force US market status | `?market=closed` / `?market=open` / `?market=auto` (persists until changed) |
 | Open the deposit modal on Explore | `/?deposit=tsla-usdc` |
+| Open the claim modal on Explore | `/?claim=1` |
 
 State is persisted to `localStorage` under `tide-demo-v1`.
 

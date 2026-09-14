@@ -6,7 +6,6 @@ import { cx } from '@/lib/format';
 
 const NAV = [
   { to: '/', label: 'Explore' },
-  { to: '/rewards', label: 'Rewards' },
   { to: '/analytics', label: 'Analytics' },
 ];
 
