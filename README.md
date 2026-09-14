@@ -17,7 +17,8 @@ npm run build      # tsc + vite build
 | Connect the demo wallet | Click **Connect wallet** (800 ms fake load) or open any URL with `?wallet=demo` |
 | Reset demo state | Click the **Tide** logo 5 times within 2.5 s |
 | Force US market status | `?market=closed` / `?market=open` / `?market=auto` (persists until changed) |
-| Open a vault with the deposit input focused | `/vault/tsla-usdc?action=deposit` |
+| Open the deposit modal on Explore | `/?deposit=tsla-usdc` |
+| Open the claim modal on Explore | `/?claim=1` |
 
 State is persisted to `localStorage` under `tide-demo-v1`.
 
@@ -27,13 +28,14 @@ State is persisted to `localStorage` under `tide-demo-v1`.
 |---|---|
 | `docs/` | PRD, mock-data spec and the build brief (source of truth) |
 | `src/lib/constants.ts` | Protocol constants (§1 of the mock-data spec) |
-| `src/lib/math.ts` | **All** derived numbers: APR, boost, ranges, zap/withdraw previews, claim split |
+| `src/lib/math.ts` | **All** derived numbers: APR, ranges, zap/withdraw previews, claim split |
 | `src/lib/market.ts` | US market clock (America/New_York, weekdays 09:30–16:00 ET, holidays ignored) |
 | `src/lib/series.ts` | Seeded NAV + emissions series |
 | `src/data/` | Vaults, protocol figures, demo user |
 | `src/store/useStore.ts` | zustand store (persisted) with deposit / withdraw / stake / claim / lock / unlock |
-| `src/store/selectors.ts` | Derived hooks — one boost value feeds Markets, Vault, Portfolio and Rewards |
-| `src/components/vault/PriceRange.tsx` | The signature Price Range component (in range / out of range / defensive) |
+| `src/store/selectors.ts` | Derived hooks shared by Explore, Vault and Rewards |
+| `src/components/deposit/DepositCard.tsx` | The deposit / withdraw card (Explore modal and vault page) |
+| `src/components/vault/PriceRange.tsx` | Price chart with the LP range band (lightweight-charts) |
 | `src/test/` | Consistency checks against the spec anchors and after every action |
 
 ## Design tokens

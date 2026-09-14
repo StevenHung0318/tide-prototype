@@ -4,7 +4,6 @@ import * as m from '@/lib/math';
 import { cx, fmtPct, fmtUsd } from '@/lib/format';
 import type { Vault } from '@/lib/types';
 import { useStore } from '@/store/useStore';
-import { useUserDerived } from '@/store/selectors';
 import { TokenPair } from '@/components/ui/TokenIcon';
 
 interface Props {
@@ -19,9 +18,6 @@ export function VaultSelect({ open, onClose, onSelect, selectedId }: Props) {
   const [q, setQ] = useState('');
   const input = useRef<HTMLInputElement>(null);
   const tvlDelta = useStore((s) => s.user.tvlDelta);
-  const d = useUserDerived();
-  const userBoost = d.connected ? d.boost : 1;
-  const showBoost = d.connected && d.lockedTide > 0 && d.hasPositions;
 
   useEffect(() => {
     if (!open) return;
@@ -60,8 +56,7 @@ export function VaultSelect({ open, onClose, onSelect, selectedId }: Props) {
         </div>
         <ul className="max-h-[420px] overflow-y-auto py-1">
           {rows.map(({ v, tvl }) => {
-            const b = m.aprBreakdown(v, tvl, userBoost);
-            const apr = showBoost ? b.yourApr : b.totalApr;
+            const apr = m.aprBreakdown(v, tvl).totalApr;
             const selected = v.id === selectedId;
             return (
               <li key={v.id}>
@@ -74,7 +69,7 @@ export function VaultSelect({ open, onClose, onSelect, selectedId }: Props) {
                     <div className="text-sm font-medium text-ink">{vaultName(v)}</div>
                     <div className="text-xs text-ink-3 num">{fmtUsd(tvl)} TVL{v.tier === 'Degen' ? ' · High risk' : ''}</div>
                   </div>
-                  <div className={cx('display num text-md font-semibold', showBoost ? 'text-aqua' : 'text-ink')}>{fmtPct(apr)}</div>
+                  <div className="display num text-md font-semibold text-ink">{fmtPct(apr)}</div>
                 </button>
               </li>
             );

@@ -15,22 +15,14 @@ describe('anchors — MOCK-DATA-SPEC §3', () => {
   });
   it('tsla-usdc staked TVL = $3.57M, base TIDE APR ≈ 18.4%, total ≈ 32.6%', () => {
     expect(m.stakedTvl(tsla.tvl)).toBeCloseTo(3_570_000, 0);
-    const b = m.aprBreakdown(tsla, tsla.tvl, 1);
-    expect(b.baseTideApr * 100).toBeCloseTo(18.4, 1);
+    const b = m.aprBreakdown(tsla, tsla.tvl);
+    expect(b.tideApr * 100).toBeCloseTo(18.4, 1);
     expect(b.totalApr * 100).toBeCloseTo(32.6, 1);
   });
-  it('demo user boost = 1.5 → Your TIDE APR ≈ 27.5%, Your APR ≈ 41.7%', () => {
+  it('demo user deposits ≈ $12,398 and 36,500 TIDE locked', () => {
     const u = demoUserState(0);
-    const deposits = m.totalDepositsUsd(u.positions, VAULT_BY_ID);
-    const locked = m.lockedUsd(u.locks);
-    expect(deposits).toBeCloseTo(12_398, 0);
-    expect(locked).toBeCloseTo(1_533, 0);
-    expect(m.boostRatio(locked, deposits)).toBeGreaterThanOrEqual(0.1);
-    const b = m.boost(locked, deposits);
-    expect(b).toBe(1.5);
-    const br = m.aprBreakdown(tsla, tsla.tvl, b);
-    expect(br.yourTideApr * 100).toBeCloseTo(27.5, 1);
-    expect(br.yourApr * 100).toBeCloseTo(41.7, 1);
+    expect(m.totalDepositsUsd(u.positions, VAULT_BY_ID)).toBeCloseTo(12_398, 0);
+    expect(m.lockedTide(u.locks)).toBe(38_650);
   });
   it('demo Net PnL = +$412 (+3.4%)', () => {
     const u = demoUserState(0);
@@ -49,32 +41,11 @@ describe('anchors — MOCK-DATA-SPEC §3', () => {
   });
 });
 
-describe('boost curve', () => {
-  it('is 1.0 with no locks, linear to 1.5 at 10% ratio, capped', () => {
-    expect(m.boost(0, 10_000)).toBe(1);
-    expect(m.boost(500, 10_000)).toBeCloseTo(1.25, 10);
-    expect(m.boost(1_000, 10_000)).toBe(1.5);
-    expect(m.boost(5_000, 10_000)).toBe(1.5);
-    expect(m.boost(1_000, 0)).toBe(1);
-  });
-  it('a larger deposit dilutes the ratio and lowers boost', () => {
-    const u = demoUserState(0);
-    const locked = m.lockedUsd(u.locks);
-    const before = m.boost(locked, 12_398);
-    const after = m.boost(locked, 12_398 + 5_000);
-    expect(after).toBeLessThan(before);
-    expect(after).toBeGreaterThan(1);
-  });
-});
-
 describe('APR consistency — checklist §7', () => {
-  it('total APR = fee + base TIDE; your APR = fee + base × boost for every vault', () => {
+  it('total APR = fee + TIDE for every vault', () => {
     for (const v of VAULTS) {
-      for (const b of [1, 1.2, 1.5]) {
-        const br = m.aprBreakdown(v, v.tvl, b);
-        expect(br.totalApr).toBeCloseTo(br.feeApr + br.baseTideApr, 12);
-        expect(br.yourApr).toBeCloseTo(br.feeApr + br.baseTideApr * b, 12);
-      }
+      const br = m.aprBreakdown(v, v.tvl);
+      expect(br.totalApr).toBeCloseTo(br.feeApr + br.tideApr, 12);
     }
   });
   it('emission weights sum to 100%', () => {

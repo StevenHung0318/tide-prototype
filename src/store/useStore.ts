@@ -36,7 +36,6 @@ interface AppState {
   stakeAll: (vaultId: string) => void;
   claimInstant: () => number;
   claimLock: () => Lock | null;
-  lockFromWallet: (amount: number) => Lock | null;
   unlock: (lockId: string) => void;
   acknowledgeDegen: () => void;
   tickPending: (now: number) => void;
@@ -188,23 +187,6 @@ export const useStore = create<AppState>()(
         return lock;
       },
 
-      lockFromWallet: (amount) => {
-        const s = get();
-        const bal = s.user.balances.TIDE ?? 0;
-        const amt = Math.min(amount, bal);
-        if (amt <= 0) return null;
-        const now = Date.now();
-        const lock: Lock = { id: uid(), amount: amt, lockedAt: now, unlockAt: now + CONSTANTS.LOCK_DAYS * DAY, redistributionEarned: 0 };
-        set({
-          user: record(
-            { ...s.user, balances: { ...s.user.balances, TIDE: bal - amt }, locks: [lock, ...s.user.locks] },
-            'lock',
-            `Locked ${Math.round(amt)} TIDE`,
-          ),
-        });
-        return lock;
-      },
-
       unlock: (lockId) =>
         set((s) => {
           const l = s.user.locks.find((x) => x.id === lockId);
@@ -224,14 +206,12 @@ export const useStore = create<AppState>()(
 
       acknowledgeDegen: () => set((s) => ({ user: { ...s.user, degenAcknowledged: true } })),
 
-      /** Live mining accrual: pending TIDE grows at the user's boosted rate. */
+      /** Live accrual: pending TIDE grows at the vault's TIDE APR. */
       tickPending: (now) =>
         set((s) => {
           if (!s.connected) return {};
           const dt = Math.min(Math.max(0, (now - s.user.pendingUpdatedAt) / 1000), 3600); // cap catch-up to 1h
-          const deposits = m.totalDepositsUsd(s.user.positions, VAULT_BY_ID);
-          const b = m.boost(m.lockedUsd(s.user.locks), deposits);
-          const rate = m.pendingAccrualPerSecond(s.user.positions, VAULT_BY_ID, s.user.tvlDelta, b);
+          const rate = m.pendingAccrualPerSecond(s.user.positions, VAULT_BY_ID, s.user.tvlDelta);
           return { user: { ...s.user, pendingTide: s.user.pendingTide + rate * dt, pendingUpdatedAt: now } };
         }),
 

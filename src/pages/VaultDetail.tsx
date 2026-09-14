@@ -1,16 +1,23 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { VAULT_BY_ID, TIER_CAPACITY, vaultName } from '@/data/vaults';
+import { fmtDate, fmtPct, fmtToken, fmtUsd, cx } from '@/lib/format';
 import * as m from '@/lib/math';
-import { fmtPct, fmtUsd, cx } from '@/lib/format';
+import { useStore } from '@/store/useStore';
 import { useMarketStatus, useVaultApr } from '@/store/selectors';
-import { RangeStatusBadge, TierBadge } from '@/components/ui/Badge';
 import { TokenPair } from '@/components/ui/TokenIcon';
 import { Stat, StatRow } from '@/components/ui/Stat';
 import { PriceRange } from '@/components/vault/PriceRange';
 import { AprBreakdown } from '@/components/vault/AprBreakdown';
 import { NavChart } from '@/components/vault/NavChart';
+import { DepositCard } from '@/components/deposit/DepositCard';
+import type { Vault } from '@/lib/types';
+import { CONSTANTS } from '@/lib/constants';
+import { useUserDerived } from '@/store/selectors';
 import { Button } from '@/components/ui/Button';
+import { Tooltip } from '@/components/ui/Tooltip';
+import { BoostedApr } from '@/components/ui/BoostedApr';
+import { ClaimModal } from '@/components/rewards/ClaimModal';
 
 export function VaultDetail() {
   const { id = '' } = useParams();
@@ -28,56 +35,88 @@ export function VaultDetail() {
 
 function VaultView({ vaultId, market }: { vaultId: string; market: 'open' | 'closed' }) {
   const v = VAULT_BY_ID[vaultId];
-  const { tvl, breakdown: b, showBoost } = useVaultApr(v);
-  const status = m.rangeStatus(v, market);
+  const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const { tvl, breakdown: b } = useVaultApr(v);
   const cap = TIER_CAPACITY[v.tier];
   const fill = Math.min(1, tvl / cap);
   const [aprHover, setAprHover] = useState(false);
 
   return (
-    <div className="space-y-6 max-w-[960px] mx-auto">
+    <div className="space-y-6">
       <header className="flex flex-wrap items-center gap-3">
-        <Link to="/explore" className="text-xs text-ink-3 hover:text-ink-2 mr-1">← Explore</Link>
+        <Link to="/" className="text-xs text-ink-3 hover:text-ink-2 mr-1">← Earn</Link>
         <TokenPair a={v.token0} b={v.token1} size={28} />
         <h1 className="display text-2xl font-semibold">{vaultName(v)}</h1>
-        <TierBadge tier={v.tier} />
-        <RangeStatusBadge status={status} />
-        <Link to={`/?vault=${v.id}`} className="ml-auto"><Button>Deposit</Button></Link>
       </header>
 
-      <StatRow cols={3}>
-        <Stat label="TVL" value={fmtUsd(tvl)} />
-        <div className="relative cursor-help" onMouseEnter={() => setAprHover(true)} onMouseLeave={() => setAprHover(false)}>
-          <Stat
-            label={showBoost ? 'Your APR' : 'APR'}
-            value={fmtPct(showBoost ? b.yourApr : b.totalApr)}
-            tone={showBoost ? 'aqua' : 'default'}
-            sub={
-              <>
-                {fmtPct(b.feeApr)} fees + <span className="text-tide">{fmtPct(showBoost ? b.yourTideApr : b.baseTideApr)} TIDE</span>
-                {showBoost && <span className="text-ink-3"> · ×{b.boost.toFixed(2).replace(/\.?0+$/, '')} boost</span>}
-              </>
-            }
-          />
-          {aprHover && (
-            <div className="absolute left-0 top-full mt-1 z-40 w-72 bg-panel-2 border border-line-2 rounded-md shadow-pop p-3 animate-fade-in">
-              <AprBreakdown vault={v} compact />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="lg:col-span-2 space-y-6 min-w-0">
+        <StatRow cols={3}>
+          <Stat label="TVL" value={fmtUsd(tvl)} />
+          <div className="relative cursor-help" onMouseEnter={() => setAprHover(true)} onMouseLeave={() => setAprHover(false)}>
+            <Stat
+              label="APR"
+              value={<BoostedApr value={fmtPct(b.totalApr)} />}
+            />
+            {aprHover && (
+              <div className="absolute left-0 top-full mt-1 z-40 w-72 bg-panel-2 border border-line-2 rounded-md shadow-pop p-3 animate-fade-in">
+                <AprBreakdown vault={v} compact />
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col gap-1 min-w-0">
+            <div className="text-xs text-ink-3">Capacity</div>
+            <div className="display num text-xl font-semibold truncate">
+              {fmtUsd(tvl)} <span className="text-ink-3 text-sm font-normal">/ {fmtUsd(cap)} · {fmtPct(fill, 0)} filled</span>
             </div>
-          )}
-        </div>
-        <div className="flex flex-col gap-1 min-w-0">
-          <div className="text-xs text-ink-3">Capacity</div>
-          <div className="display num text-xl font-semibold truncate">
-            {fmtUsd(tvl)} <span className="text-ink-3 text-sm font-normal">/ {fmtUsd(cap)}</span>
           </div>
-          <div className="h-1.5 rounded-full bg-line overflow-hidden mt-1">
-            <div className={cx('h-full rounded-full transition-[width] duration-500', fill > 0.9 ? 'bg-amber' : 'bg-aqua')} style={{ width: `${fill * 100}%` }} />
-          </div>
-        </div>
-      </StatRow>
+        </StatRow>
 
-      <PriceRange vault={v} market={market} />
-      <NavChart vault={v} />
+        <PriceRange vault={v} market={market} />
+        <NavChart vault={v} />
+        </div>
+        <div className="lg:sticky lg:top-[72px] space-y-6">
+          <YourPosition vault={v} tvl={tvl} onClaim={() => setParams({ claim: '1' })} />
+          <DepositCard key={v.id} vault={v} onVaultChange={(nv) => navigate(`/vault/${nv.id}`)} showVaultLink={false} />
+        </div>
+      </div>
+      <ClaimModal open={params.get('claim') === '1'} onClose={() => setParams({})} />
     </div>
+  );
+}
+
+function YourPosition({ vault: v, tvl, onClaim }: { vault: Vault; tvl: number; onClaim: () => void }) {
+  const connected = useStore((s) => s.connected);
+  const p = useStore((s) => s.user.positions[v.id]);
+  const d = useUserDerived();
+  if (!connected || !p) return null;
+  const value = m.positionValue(p, v);
+  const fees = m.feesEarned(value, v.feeApr7d, p.depositedAt, Date.now());
+  const b = m.aprBreakdown(v, tvl);
+  return (
+    <section className="bg-panel border border-line rounded-lg p-5 max-w-[440px] mx-auto w-full">
+      <h2 className="display text-sm font-semibold">Your position</h2>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-5 mt-4 num">
+        <Big label="Value" value={fmtUsd(value, { compact: false, cents: true })} tip={`${fmtToken(m.positionTdlp(p), 1)} ${v.receiptSymbol} · deposited ${fmtDate(p.depositedAt)}`} />
+        <Big label="Your APR" value={fmtPct(b.totalApr)} tip={`${fmtPct(b.feeApr)} from fees + ${fmtPct(b.tideApr)} in TIDE`} />
+        <Big label="Fees earned" value={`+${fmtUsd(fees, { compact: false, cents: true })}`} tone="text-up" tip="Fees compound into your tdLP automatically. Nothing to claim." />
+        <Big label="TIDE rewards" value={`${fmtToken(d.pendingTide, 1)} TIDE`} tone="text-tide" tip={`≈ ${fmtUsd(d.pendingTide * CONSTANTS.TIDE_PRICE, { compact: false, cents: true })} across all your vaults`} />
+      </div>
+      <Button block variant="tide" className="mt-5" onClick={onClaim} disabled={d.pendingTide < 0.005}>
+        {d.pendingTide < 0.005 ? 'No rewards to claim yet' : `Claim ${fmtToken(d.pendingTide, 1)} TIDE`}
+      </Button>
+    </section>
+  );
+}
+
+function Big({ label, value, tone, tip }: { label: string; value: string; tone?: string; tip: string }) {
+  return (
+    <Tooltip content={tip} align="start" side="bottom" wide>
+      <div className="cursor-help">
+        <div className="text-xs text-ink-3">{label}</div>
+        <div className={cx('display text-2xl font-semibold mt-1 leading-none', tone ?? 'text-ink')}>{value}</div>
+      </div>
+    </Tooltip>
   );
 }
