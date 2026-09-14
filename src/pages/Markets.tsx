@@ -5,36 +5,51 @@ import { VAULTS, VAULT_BY_ID, vaultName } from '@/data/vaults';
 import * as m from '@/lib/math';
 import { cx, fmtPct, fmtToken, fmtUsd } from '@/lib/format';
 import { CONSTANTS } from '@/lib/constants';
-import type { Tier, Vault } from '@/lib/types';
+import type { Vault } from '@/lib/types';
 import { useStore } from '@/store/useStore';
 import { useUserDerived, useVaultApr } from '@/store/selectors';
 import { Stat, StatRow } from '@/components/ui/Stat';
 import { TokenPair } from '@/components/ui/TokenIcon';
 import { Button } from '@/components/ui/Button';
-import { Segmented } from '@/components/ui/Tabs';
 import { AprBreakdown } from '@/components/vault/AprBreakdown';
 import { DepositModal } from '@/components/deposit/DepositModal';
 import { ClaimModal } from '@/components/rewards/ClaimModal';
 
-type Filter = 'All' | Tier;
 
 export function Markets() {
   const tvlDelta = useStore((s) => s.user.tvlDelta);
   const d = useUserDerived();
-  const [filter, setFilter] = useState<Filter>('All');
+  const [q, setQ] = useState('');
   const [params, setParams] = useSearchParams();
   const depositVault = VAULT_BY_ID[params.get('deposit') ?? ''] ?? null;
   const claimOpen = params.get('claim') === '1';
   const locks = useStore((s) => s.user.locks);
+  const unlock = useStore((s) => s.unlock);
+  const pushToast = useStore((s) => s.pushToast);
+  const [unlocking, setUnlocking] = useState(false);
   const lockedTide = m.lockedTide(locks);
   const nextUnlock = locks.length ? Math.min(...locks.map((l) => l.unlockAt)) : null;
-  const unlockable = locks.some((l) => m.isUnlockable(l, Date.now()));
+  const ready = locks.filter((l) => m.isUnlockable(l, Date.now()));
+  const readyTide = ready.reduce((a, l) => a + l.amount + l.redistributionEarned, 0);
+  const unlockAll = async () => {
+    setUnlocking(true);
+    await new Promise((r) => setTimeout(r, 1500));
+    for (const l of ready) unlock(l.id);
+    setUnlocking(false);
+    pushToast({ title: `Unlocked ${fmtToken(readyTide, 1)} TIDE`, tone: 'tide' });
+  };
+  const lockLine =
+    lockedTide <= 0
+      ? 'Nothing locked'
+      : ready.length
+        ? `${fmtToken(readyTide, 0)} TIDE ready to unlock`
+        : `${fmtToken(lockedTide, 0)} TIDE locked · next unlock in ${Math.max(0, Math.ceil(((nextUnlock ?? 0) - Date.now()) / 86_400_000))}d`;
   const rows = useMemo(
     () =>
-      VAULTS.filter((v) => filter === 'All' || v.tier === filter)
+      VAULTS.filter((v) => vaultName(v).toLowerCase().replace(/\s/g, '').includes(q.toLowerCase().replace(/\s/g, '')))
         .map((v) => ({ v, tvl: m.effectiveTvl(v, tvlDelta) }))
         .sort((a, b) => b.tvl - a.tvl),
-    [filter, tvlDelta],
+    [q, tvlDelta],
   );
   const showMine = d.connected && d.hasPositions;
   const positions = useStore((s) => s.user.positions);
@@ -47,22 +62,26 @@ export function Markets() {
   return (
     <div className="space-y-6">
       {showMine ? (
-        <StatRow>
+        <StatRow cols={3}>
           <Stat label="Your deposits" value={fmtUsd(d.depositsUsd, { compact: false })} />
           <Stat label="Fees earned" value={`+${fmtUsd(totalFees, { compact: false, cents: true })}`} tone="up" />
           <div className="flex items-center justify-between gap-3 min-w-0">
-            <Stat label="Pending TIDE" value={`${fmtToken(d.pendingTide, 2)} TIDE`} tone="tide" sub={fmtUsd(d.pendingTide * CONSTANTS.TIDE_PRICE, { compact: false, cents: true })} />
-            <Button size="sm" variant="tide" onClick={() => setParams({ claim: '1' })} disabled={d.pendingTide < 0.005}>Claim</Button>
-          </div>
-          <div className="flex items-center justify-between gap-3 min-w-0">
             <Stat
-              label="Locked TIDE"
-              value={`${fmtToken(lockedTide, 0)} TIDE`}
-              sub={nextUnlock ? (unlockable ? 'Ready to unlock' : `Next unlock in ${Math.max(0, Math.ceil((nextUnlock - Date.now()) / 86_400_000))}d`) : 'Lock rewards for 100%'}
+              label="TIDE rewards"
+              value={`${fmtToken(d.pendingTide, 2)} TIDE`}
+              tone="tide"
+              sub={
+                <>
+                  ≈ {fmtUsd(d.pendingTide * CONSTANTS.TIDE_PRICE, { compact: false, cents: true })} <span className="text-ink-3">· {lockLine}</span>
+                </>
+              }
             />
-            {locks.length > 0 && (
-              <Button size="sm" variant={unlockable ? 'tide' : 'secondary'} onClick={() => setParams({ claim: '1' })}>{unlockable ? 'Unlock' : 'View'}</Button>
-            )}
+            <div className="flex flex-col gap-1.5 shrink-0">
+              <Button size="sm" variant="tide" onClick={() => setParams({ claim: '1' })} disabled={d.pendingTide < 0.005}>Claim</Button>
+              {ready.length > 0 && (
+                <Button size="sm" variant="secondary" onClick={unlockAll} loading={unlocking}>Unlock</Button>
+              )}
+            </div>
           </div>
         </StatRow>
       ) : (
@@ -74,17 +93,18 @@ export function Markets() {
 
       <div className="flex items-center justify-between gap-4">
         <h1 className="display text-lg font-semibold">Vaults</h1>
-        <Segmented<Filter>
-          size="sm"
-          value={filter}
-          onChange={setFilter}
-          options={[
-            { value: 'All', label: 'All' },
-            { value: 'Core', label: 'Core' },
-            { value: 'Turbo', label: 'Turbo' },
-            { value: 'Degen', label: 'Degen' },
-          ]}
-        />
+        <div className="relative">
+          <svg viewBox="0 0 16 16" className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-ink-3" fill="none" aria-hidden>
+            <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search vaults"
+            className="h-8 w-56 pl-8 pr-3 rounded bg-panel border border-line focus:border-line-2 outline-none text-sm placeholder:text-ink-3"
+          />
+        </div>
       </div>
 
       <div className="bg-panel border border-line rounded-md overflow-x-auto">
@@ -102,6 +122,11 @@ export function Markets() {
             {rows.map(({ v, tvl }) => (
               <VaultRow key={v.id} vault={v} tvl={tvl} showMine={showMine} onDeposit={() => setParams({ deposit: v.id })} />
             ))}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-sm text-ink-3">No vaults match "{q}".</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

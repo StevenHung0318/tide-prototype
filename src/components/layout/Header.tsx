@@ -5,7 +5,7 @@ import { useStore } from '@/store/useStore';
 import { cx } from '@/lib/format';
 
 const NAV = [
-  { to: '/', label: 'Explore' },
+  { to: '/', label: 'Earn' },
   { to: '/analytics', label: 'Analytics' },
 ];
 

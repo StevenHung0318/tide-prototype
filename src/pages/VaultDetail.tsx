@@ -38,7 +38,7 @@ function VaultView({ vaultId, market }: { vaultId: string; market: 'open' | 'clo
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-center gap-3">
-        <Link to="/" className="text-xs text-ink-3 hover:text-ink-2 mr-1">← Explore</Link>
+        <Link to="/" className="text-xs text-ink-3 hover:text-ink-2 mr-1">← Earn</Link>
         <TokenPair a={v.token0} b={v.token1} size={28} />
         <h1 className="display text-2xl font-semibold">{vaultName(v)}</h1>
       </header>
@@ -78,7 +78,7 @@ function VaultView({ vaultId, market }: { vaultId: string; market: 'open' | 'clo
         <NavChart vault={v} />
         </div>
         <div className="lg:sticky lg:top-[72px] space-y-6">
-          <YourPosition vault={v} />
+          <YourPosition vault={v} tvl={tvl} />
           <DepositCard key={v.id} vault={v} onVaultChange={(nv) => navigate(`/vault/${nv.id}`)} showVaultLink={false} />
         </div>
       </div>
@@ -86,19 +86,20 @@ function VaultView({ vaultId, market }: { vaultId: string; market: 'open' | 'clo
   );
 }
 
-function YourPosition({ vault: v }: { vault: Vault }) {
+function YourPosition({ vault: v, tvl }: { vault: Vault; tvl: number }) {
   const connected = useStore((s) => s.connected);
   const p = useStore((s) => s.user.positions[v.id]);
   if (!connected || !p) return null;
   const value = m.positionValue(p, v);
   const fees = m.feesEarned(value, v.feeApr7d, p.depositedAt, Date.now());
+  const b = m.aprBreakdown(v, tvl);
   return (
     <section className="bg-panel border border-line rounded-lg p-4 max-w-[440px] mx-auto w-full">
       <div className="flex items-center justify-between">
         <h2 className="display text-sm font-semibold">Your position</h2>
         <span className="text-xs text-ink-3 num">Since {fmtDate(p.depositedAt)}</span>
       </div>
-      <div className="grid grid-cols-2 gap-4 mt-3 num">
+      <div className="grid grid-cols-3 gap-4 mt-3 num">
         <div>
           <div className="text-xs text-ink-3">Value</div>
           <div className="display text-xl font-semibold text-ink mt-0.5">{fmtUsd(value, { compact: false, cents: true })}</div>
@@ -107,7 +108,11 @@ function YourPosition({ vault: v }: { vault: Vault }) {
         <div>
           <div className="text-xs text-ink-3">Fees earned</div>
           <div className="display text-xl font-semibold text-up mt-0.5">+{fmtUsd(fees, { compact: false, cents: true })}</div>
-          <div className="text-xs text-ink-3">at {fmtPct(v.feeApr7d)} fee APR</div>
+        </div>
+        <div>
+          <div className="text-xs text-ink-3">Your APR</div>
+          <div className="display text-xl font-semibold text-ink mt-0.5">{fmtPct(b.totalApr)}</div>
+          <div className="text-xs text-ink-3">{fmtPct(b.feeApr)} fees + <span className="text-tide">{fmtPct(b.tideApr)} TIDE</span></div>
         </div>
       </div>
     </section>

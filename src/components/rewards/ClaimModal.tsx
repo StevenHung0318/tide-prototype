@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/Button';
 const TX_DELAY = 1500;
 type Choice = 'now' | 'lock';
 
-/** Claim pending TIDE (now at 50%, or lock 90 days for 100%) and manage locks. */
+/** Claim pending TIDE: now at 50%, or lock 90 days for 100%. */
 export function ClaimModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   useEffect(() => {
     if (!open) return;
@@ -25,7 +25,6 @@ export function ClaimModal({ open, onClose }: { open: boolean; onClose: () => vo
       <div className="relative w-full max-w-[440px] animate-fade-in space-y-3">
         <button onClick={onClose} className="absolute -top-8 right-0 text-xs text-ink-3 hover:text-ink" aria-label="Close">Close ✕</button>
         <Claim onDone={onClose} />
-        <Locks />
       </div>
     </div>
   );
@@ -38,6 +37,8 @@ function Claim({ onDone }: { onDone: () => void }) {
   const pushToast = useStore((s) => s.pushToast);
   const [choice, setChoice] = useState<Choice>('lock');
   const [busy, setBusy] = useState(false);
+  const forfeitsAdded = useStore((s) => s.forfeitsAdded);
+  const pool = PROTOCOL.redistribution.fromForfeits + forfeitsAdded + PROTOCOL.redistribution.fromBuybacks;
   const split = m.claimSplit(d.pendingTide);
   const empty = d.pendingTide < 0.005;
 
@@ -72,6 +73,7 @@ function Claim({ onDone }: { onDone: () => void }) {
       <Button block size="lg" variant="tide" onClick={submit} disabled={empty} loading={busy}>
         {busy ? 'Confirming…' : empty ? 'Nothing to claim yet' : choice === 'now' ? `Claim ${fmtToken(split.instant, 1)} TIDE` : `Lock ${fmtToken(split.locked, 1)} TIDE`}
       </Button>
+      <div className="text-2xs text-ink-3 num">Lockers share this week's pool of {fmtInt(pool)} TIDE from forfeits and buybacks.</div>
     </section>
   );
 }
@@ -83,62 +85,5 @@ function Option({ selected, onSelect, title, amount, note, good }: { selected: b
       <div className={cx('display num text-xl font-semibold mt-0.5', selected ? 'text-tide' : 'text-ink')}>{fmtToken(amount, 1)} <span className="text-xs font-normal">TIDE</span></div>
       <div className={cx('text-2xs mt-1', good ? 'text-up' : 'text-ink-3')}>{note}</div>
     </button>
-  );
-}
-
-function Locks() {
-  const locks = useStore((s) => s.user.locks);
-  const unlock = useStore((s) => s.unlock);
-  const pushToast = useStore((s) => s.pushToast);
-  const forfeitsAdded = useStore((s) => s.forfeitsAdded);
-  const [busy, setBusy] = useState<string | null>(null);
-  const now = Date.now();
-  const total = m.lockedTide(locks);
-  const pool = PROTOCOL.redistribution.fromForfeits + forfeitsAdded + PROTOCOL.redistribution.fromBuybacks;
-
-  const doUnlock = async (id: string, amount: number) => {
-    setBusy(id);
-    await new Promise((r) => setTimeout(r, TX_DELAY));
-    unlock(id);
-    setBusy(null);
-    pushToast({ title: `Unlocked ${fmtToken(amount, 1)} TIDE`, tone: 'tide' });
-  };
-
-  return (
-    <section className="bg-panel border border-line rounded-lg p-4 space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="display text-sm font-semibold">Locked TIDE</h2>
-        <span className="text-xs num text-tide">{fmtToken(total, 0)} TIDE</span>
-      </div>
-      {locks.length === 0 ? (
-        <div className="text-xs text-ink-3">Nothing locked yet.</div>
-      ) : (
-        <ul className="divide-y divide-line -my-1">
-          {[...locks].sort((a, b) => a.unlockAt - b.unlockAt).map((l) => {
-            const ready = m.isUnlockable(l, now);
-            return (
-              <li key={l.id} className="py-2 text-xs num">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-ink font-medium">{fmtToken(l.amount, 1)} TIDE</span>
-                  <span className="text-ink-3">
-                    {ready ? 'Ready' : `${m.lockDaysLeft(l, now)}d left`}
-                    {l.redistributionEarned > 0 && <span className="text-up"> · +{fmtToken(l.redistributionEarned, 1)} earned</span>}
-                  </span>
-                </div>
-                <div className="mt-1.5 h-1 rounded-full bg-line overflow-hidden">
-                  <div className={cx('h-full rounded-full', ready ? 'bg-up' : 'bg-tide')} style={{ width: `${m.lockProgress(l, now) * 100}%` }} />
-                </div>
-                {ready && (
-                  <Button size="sm" variant="tide" className="mt-2" onClick={() => doUnlock(l.id, l.amount)} loading={busy === l.id}>
-                    Unlock {fmtToken(l.amount + l.redistributionEarned, 1)} TIDE
-                  </Button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      <div className="text-2xs text-ink-3 num">Lockers share this week's pool of {fmtInt(pool)} TIDE from forfeits and buybacks.</div>
-    </section>
   );
 }
