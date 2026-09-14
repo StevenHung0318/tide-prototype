@@ -74,9 +74,6 @@ function VaultView({ vaultId, market }: { vaultId: string; market: 'open' | 'clo
             <div className="display num text-xl font-semibold truncate">
               {fmtUsd(tvl)} <span className="text-ink-3 text-sm font-normal">/ {fmtUsd(cap)}</span>
             </div>
-            <div className="h-1.5 rounded-full bg-line overflow-hidden mt-1">
-              <div className={cx('h-full rounded-full transition-[width] duration-500', fill > 0.9 ? 'bg-amber' : 'bg-aqua')} style={{ width: `${fill * 100}%` }} />
-            </div>
           </div>
         </StatRow>
 
