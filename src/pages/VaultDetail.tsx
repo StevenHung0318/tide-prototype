@@ -72,7 +72,7 @@ function VaultView({ vaultId, market }: { vaultId: string; market: 'open' | 'clo
           <div className="flex flex-col gap-1 min-w-0">
             <div className="text-xs text-ink-3">Capacity</div>
             <div className="display num text-xl font-semibold truncate">
-              {fmtUsd(tvl)} <span className="text-ink-3 text-sm font-normal">/ {fmtUsd(cap)}</span>
+              {fmtUsd(tvl)} <span className="text-ink-3 text-sm font-normal">/ {fmtUsd(cap)} · {fmtPct(fill, 0)} filled</span>
             </div>
           </div>
         </StatRow>
