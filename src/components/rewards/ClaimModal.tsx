@@ -6,6 +6,7 @@ import { cx, fmtDate, fmtInt, fmtToken, fmtUsd } from '@/lib/format';
 import { useStore } from '@/store/useStore';
 import { useUserDerived } from '@/store/selectors';
 import { Button } from '@/components/ui/Button';
+import { LocksList } from './LocksList';
 
 const TX_DELAY = 1500;
 type Choice = 'now' | 'lock';
@@ -25,6 +26,7 @@ export function ClaimModal({ open, onClose }: { open: boolean; onClose: () => vo
       <div className="relative w-full max-w-[440px] animate-fade-in space-y-3">
         <button onClick={onClose} className="absolute -top-8 right-0 text-xs text-ink-3 hover:text-ink" aria-label="Close">Close ✕</button>
         <Claim onDone={onClose} />
+        <LocksList />
       </div>
     </div>
   );

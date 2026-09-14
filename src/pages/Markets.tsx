@@ -14,7 +14,6 @@ import { Button } from '@/components/ui/Button';
 import { AprBreakdown } from '@/components/vault/AprBreakdown';
 import { DepositModal } from '@/components/deposit/DepositModal';
 import { ClaimModal } from '@/components/rewards/ClaimModal';
-import { LocksList } from '@/components/rewards/LocksList';
 
 
 export function Markets() {
@@ -76,8 +75,6 @@ export function Markets() {
           <Stat label="Fees earned (24h)" value={fmtUsd(m.dailyFees(VAULTS, tvlDelta), { compact: false })} />
         </StatRow>
       )}
-
-      {showMine && <LocksList />}
 
       <div className="flex items-center justify-between gap-4">
         <h1 className="display text-lg font-semibold">Vaults</h1>
