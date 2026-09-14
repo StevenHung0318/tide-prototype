@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { VAULT_BY_ID, TIER_CAPACITY, vaultName } from '@/data/vaults';
-import { fmtPct, fmtUsd, cx } from '@/lib/format';
+import { fmtDate, fmtPct, fmtToken, fmtUsd, cx } from '@/lib/format';
+import * as m from '@/lib/math';
+import { useStore } from '@/store/useStore';
 import { useMarketStatus, useVaultApr } from '@/store/selectors';
 import { TokenPair } from '@/components/ui/TokenIcon';
 import { Stat, StatRow } from '@/components/ui/Stat';
@@ -9,6 +11,7 @@ import { PriceRange } from '@/components/vault/PriceRange';
 import { AprBreakdown } from '@/components/vault/AprBreakdown';
 import { NavChart } from '@/components/vault/NavChart';
 import { DepositCard } from '@/components/deposit/DepositCard';
+import type { Vault } from '@/lib/types';
 
 export function VaultDetail() {
   const { id = '' } = useParams();
@@ -74,10 +77,39 @@ function VaultView({ vaultId, market }: { vaultId: string; market: 'open' | 'clo
         <PriceRange vault={v} market={market} />
         <NavChart vault={v} />
         </div>
-        <div className="lg:sticky lg:top-[72px]">
+        <div className="lg:sticky lg:top-[72px] space-y-6">
+          <YourPosition vault={v} />
           <DepositCard key={v.id} vault={v} onVaultChange={(nv) => navigate(`/vault/${nv.id}`)} showVaultLink={false} />
         </div>
       </div>
     </div>
+  );
+}
+
+function YourPosition({ vault: v }: { vault: Vault }) {
+  const connected = useStore((s) => s.connected);
+  const p = useStore((s) => s.user.positions[v.id]);
+  if (!connected || !p) return null;
+  const value = m.positionValue(p, v);
+  const fees = m.feesEarned(value, v.feeApr7d, p.depositedAt, Date.now());
+  return (
+    <section className="bg-panel border border-line rounded-lg p-4 max-w-[440px] mx-auto w-full">
+      <div className="flex items-center justify-between">
+        <h2 className="display text-sm font-semibold">Your position</h2>
+        <span className="text-xs text-ink-3 num">Since {fmtDate(p.depositedAt)}</span>
+      </div>
+      <div className="grid grid-cols-2 gap-4 mt-3 num">
+        <div>
+          <div className="text-xs text-ink-3">Value</div>
+          <div className="display text-xl font-semibold text-ink mt-0.5">{fmtUsd(value, { compact: false, cents: true })}</div>
+          <div className="text-xs text-ink-3">{fmtToken(m.positionTdlp(p), 1)} {v.receiptSymbol}</div>
+        </div>
+        <div>
+          <div className="text-xs text-ink-3">Fees earned</div>
+          <div className="display text-xl font-semibold text-up mt-0.5">+{fmtUsd(fees, { compact: false, cents: true })}</div>
+          <div className="text-xs text-ink-3">at {fmtPct(v.feeApr7d)} fee APR</div>
+        </div>
+      </div>
+    </section>
   );
 }
