@@ -20,16 +20,15 @@ interface Props {
   vault: Vault;
   onVaultChange: (v: Vault) => void;
   initialAmount?: string;
+  showVaultLink?: boolean;
 }
 
-export function DepositCard({ vault: v, onVaultChange, initialAmount }: Props) {
+export function DepositCard({ vault: v, onVaultChange, initialAmount, showVaultLink = true }: Props) {
   const [tab, setTab] = useState<Tab>('deposit');
   const [pick, setPick] = useState(false);
   const connected = useStore((s) => s.connected);
-  const balances = useStore((s) => s.user.balances);
   const position = useStore((s) => s.user.positions[v.id]);
   const value = m.positionValue(position, v);
-  const walletTokens = Array.from(new Set(['USDC', v.token0, v.token1]));
 
   return (
     <div className="w-full max-w-[440px] mx-auto">
@@ -46,22 +45,9 @@ export function DepositCard({ vault: v, onVaultChange, initialAmount }: Props) {
               </button>
             ))}
           </div>
-          <Link to={`/vault/${v.id}`} className="text-xs text-ink-3 hover:text-ink-2">View vault →</Link>
+          {showVaultLink && <Link to={`/vault/${v.id}`} className="text-xs text-ink-3 hover:text-ink-2">View vault →</Link>}
         </div>
 
-        {connected && (
-          <div className="flex items-center justify-between gap-3 rounded bg-deep px-3 h-10 text-xs num">
-            <span className="text-ink-3 shrink-0">Wallet</span>
-            <span className="text-ink-2 truncate">
-              {walletTokens.map((t, i) => (
-                <span key={t}>
-                  {i > 0 && <span className="text-ink-3"> · </span>}
-                  <span className="text-ink">{fmtToken(balances[t] ?? 0)}</span> {t}
-                </span>
-              ))}
-            </span>
-          </div>
-        )}
 
         {tab === 'deposit' ? (
           <DepositForm key={v.id} vault={v} onPick={() => setPick(true)} initialAmount={initialAmount} />
@@ -69,11 +55,11 @@ export function DepositCard({ vault: v, onVaultChange, initialAmount }: Props) {
           <WithdrawForm key={v.id} vault={v} onPick={() => setPick(true)} />
         )}
 
-        {connected && position && (
-          <Link to="/portfolio" className="flex items-center justify-between rounded border border-line hover:border-line-2 px-3 h-10 text-xs num transition-colors">
+        {connected && position && tab === 'deposit' && (
+          <button onClick={() => setTab('withdraw')} className="w-full flex items-center justify-between rounded border border-line hover:border-line-2 px-3 h-10 text-xs num transition-colors">
             <span className="text-ink-2">You have <span className="text-ink">{fmtUsd(value, { compact: false })}</span> in this vault</span>
-            <span className="text-aqua font-medium">View my position →</span>
-          </Link>
+            <span className="text-aqua font-medium">Withdraw →</span>
+          </button>
         )}
       </div>
       <VaultSelect open={pick} onClose={() => setPick(false)} onSelect={onVaultChange} selectedId={v.id} />
@@ -115,12 +101,15 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 /** Amount box with an inline token menu — the one thing the user touches. */
 function AmountBox({
-  value, onChange, token, tokens, onToken, balance, connected, usd, autoFocus, error,
+  value, onChange, token, tokens, onToken, balance, connected, usd, autoFocus, error, altLabel,
 }: {
   value: string; onChange: (s: string) => void; token: string; tokens: Array<{ id: string; label: string; balance?: number }>; onToken: (id: string) => void;
   balance?: number; connected: boolean; usd?: number; autoFocus?: boolean; error?: boolean;
+  /** When set, the token menu hides behind this small link instead of a pill dropdown. */
+  altLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const menu = tokens.length > 1;
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
@@ -144,10 +133,10 @@ function AmountBox({
           className="flex-1 min-w-0 bg-transparent display text-3xl num text-ink placeholder:text-ink-3 outline-none"
         />
         <div className="relative" ref={ref}>
-          <button onClick={() => tokens.length > 1 && setOpen(!open)} className="h-9 pl-2 pr-2.5 rounded-full bg-panel-2 border border-line hover:border-line-2 inline-flex items-center gap-1.5 text-sm font-medium">
+          <button onClick={() => menu && !altLabel && setOpen(!open)} className={cx('h-9 pl-2 pr-2.5 rounded-full bg-panel-2 border border-line inline-flex items-center gap-1.5 text-sm font-medium', menu && !altLabel && 'hover:border-line-2')}>
             {token !== DUAL && <TokenIcon symbol={token} size={20} />}
             {current?.label ?? token}
-            {tokens.length > 1 && <Chevron />}
+            {menu && !altLabel && <Chevron />}
           </button>
           {open && (
             <div className="absolute right-0 top-full mt-1 z-30 w-56 bg-panel-2 border border-line-2 rounded-md shadow-pop py-1 animate-fade-in">
@@ -163,7 +152,14 @@ function AmountBox({
         </div>
       </div>
       <div className="flex items-center justify-between mt-1 text-xs num">
-        <span className="text-ink-3">{usd !== undefined && usd > 0 ? `≈ ${fmtUsd(usd, { compact: false, cents: true })}` : ''}</span>
+        <span className="text-ink-3">
+          {usd !== undefined && usd > 0 ? `≈ ${fmtUsd(usd, { compact: false, cents: true })}` : ''}
+          {menu && altLabel && (
+            <button onClick={() => setOpen(!open)} className={cx('hover:text-ink-2 underline decoration-line-2 underline-offset-2', !!usd && usd > 0 && 'ml-2')}>
+              {altLabel}
+            </button>
+          )}
+        </span>
         {connected && balance !== undefined && (
           <span className="text-ink-3">
             Balance {fmtToken(balance)}
@@ -247,22 +243,22 @@ function DepositForm({ vault: v, onPick, initialAmount }: { vault: Vault; onPick
   else if (!connected) cta = { label: 'Connect wallet', disabled: false };
   else if (!preview || preview.netUsd <= 0) cta = { label: 'Enter an amount', disabled: true };
   else if (insufficient) cta = { label: `Insufficient ${insufficientToken}`, disabled: true };
-  else cta = { label: isDual ? `Deposit ${v.token0} + ${v.token1}` : `Deposit ${asset}`, disabled: false };
+  else cta = { label: isDual ? `Deposit ${v.token0} + ${v.token1}` : `Deposit ${fmtToken(amt)} ${asset}`, disabled: false };
 
   return (
     <div className="space-y-3">
-      <Field label="Into">
+      <Field label="Vault">
         <VaultPill vault={v} onPick={onPick} apr={apr} boosted={showBoost} />
       </Field>
 
-      <Field label="Pay with">
+      <Field label="Amount">
         {isDual ? (
           <div className="space-y-2">
             <AmountBox value={amount} onChange={setAmount} token={v.token0} tokens={[{ id: v.token0, label: v.token0 }]} onToken={() => {}} balance={bal(v.token0)} connected={connected} usd={amt * TOKEN_PRICES[v.token0]} autoFocus error={connected && amt > bal(v.token0)} />
             <AmountBox value={amount1} onChange={setAmount1} token={v.token1} tokens={tokens.filter((t) => t.id === v.token1 || t.id === DUAL).map((t) => (t.id === DUAL ? { ...t, label: 'Single asset instead' } : t))} onToken={(id) => id === DUAL && setAsset('USDC')} balance={bal(v.token1)} connected={connected} usd={amt1 * TOKEN_PRICES[v.token1]} error={connected && amt1 > bal(v.token1)} />
           </div>
         ) : (
-          <AmountBox value={amount} onChange={setAmount} token={asset} tokens={tokens} onToken={(id) => { setAsset(id); setAmount(''); setAmount1(''); }} balance={bal(asset)} connected={connected} usd={preview?.inputUsd} autoFocus error={insufficient} />
+          <AmountBox value={amount} onChange={setAmount} token={asset} tokens={tokens} onToken={(id) => { setAsset(id); setAmount(''); setAmount1(''); }} balance={bal(asset)} connected={connected} usd={preview?.inputUsd} autoFocus error={insufficient} altLabel={asset === 'USDC' ? `Use ${v.token0 === 'USDC' ? v.token1 : v.token0} or both tokens instead` : 'Change token'} />
         )}
       </Field>
 
@@ -375,7 +371,7 @@ function WithdrawForm({ vault: v, onPick }: { vault: Vault; onPick: () => void }
 
   return (
     <div className="space-y-3">
-      <Field label="From">
+      <Field label="Vault">
         <VaultPill vault={v} onPick={onPick} apr={showBoost ? b.yourApr : b.totalApr} boosted={showBoost} />
       </Field>
       <Field label="Amount">

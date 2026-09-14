@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { VAULTS, VAULT_BY_ID, vaultName } from '@/data/vaults';
 import * as m from '@/lib/math';
-import { fmtPct, fmtUsd, cx } from '@/lib/format';
+import { cx, fmtMultiplier, fmtPct, fmtToken, fmtUsd } from '@/lib/format';
+import { CONSTANTS } from '@/lib/constants';
 import type { Tier, Vault } from '@/lib/types';
 import { useStore } from '@/store/useStore';
 import { useUserDerived, useVaultApr } from '@/store/selectors';
@@ -20,6 +21,7 @@ export function Markets() {
   const tvlDelta = useStore((s) => s.user.tvlDelta);
   const d = useUserDerived();
   const [filter, setFilter] = useState<Filter>('All');
+  const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const depositVault = VAULT_BY_ID[params.get('deposit') ?? ''] ?? null;
   const rows = useMemo(
@@ -30,13 +32,28 @@ export function Markets() {
     [filter, tvlDelta],
   );
   const showMine = d.connected && d.hasPositions;
+  const positions = useStore((s) => s.user.positions);
+  const now = Date.now();
+  const totalFees = Object.entries(positions).reduce((a, [id, p]) => {
+    const pv = VAULT_BY_ID[id];
+    return pv ? a + m.feesEarned(m.positionValue(p, pv), pv.feeApr7d, p.depositedAt, now) : a;
+  }, 0);
 
   return (
     <div className="space-y-6">
-      <StatRow cols={2}>
-        <Stat label="Total TVL" value={fmtUsd(m.totalTvl(VAULTS, tvlDelta))} />
-        <Stat label="Fees earned (24h)" value={fmtUsd(m.dailyFees(VAULTS, tvlDelta), { compact: false })} />
-      </StatRow>
+      {showMine ? (
+        <StatRow>
+          <Stat label="Your deposits" value={fmtUsd(d.depositsUsd, { compact: false })} />
+          <Stat label="Fees earned" value={`+${fmtUsd(totalFees, { compact: false, cents: true })}`} tone="up" />
+          <Stat label="Pending TIDE" value={`${fmtToken(d.pendingTide, 2)} TIDE`} tone="tide" sub={`${fmtUsd(d.pendingTide * CONSTANTS.TIDE_PRICE, { compact: false, cents: true })} · Claim →`} onClick={() => navigate('/rewards')} />
+          <Stat label="Boost" value={fmtMultiplier(d.boost)} tone={d.boost > 1 ? 'tide' : 'default'} />
+        </StatRow>
+      ) : (
+        <StatRow cols={2}>
+          <Stat label="Total TVL" value={fmtUsd(m.totalTvl(VAULTS, tvlDelta))} />
+          <Stat label="Fees earned (24h)" value={fmtUsd(m.dailyFees(VAULTS, tvlDelta), { compact: false })} />
+        </StatRow>
+      )}
 
       <div className="flex items-center justify-between gap-4">
         <h1 className="display text-lg font-semibold">Vaults</h1>
@@ -118,7 +135,14 @@ function VaultRow({ vault: v, tvl, showMine, onDeposit }: { vault: Vault; tvl: n
       </td>
       {showMine && (
         <td className="px-3 py-3.5 text-right">
-          {position ? <span className="text-ink">{fmtUsd(m.positionValue(position, v), { compact: false })}</span> : <span className="text-ink-3">—</span>}
+          {position ? (
+            <>
+              <div className="text-ink">{fmtUsd(m.positionValue(position, v), { compact: false })}</div>
+              <div className="text-2xs text-up">+{fmtUsd(m.feesEarned(m.positionValue(position, v), v.feeApr7d, position.depositedAt, Date.now()), { compact: false, cents: true })} fees</div>
+            </>
+          ) : (
+            <span className="text-ink-3">—</span>
+          )}
         </td>
       )}
       <td className="px-4 py-3.5 text-right">
