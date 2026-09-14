@@ -26,9 +26,6 @@ interface Props {
 export function DepositCard({ vault: v, onVaultChange, initialAmount, showVaultLink = true }: Props) {
   const [tab, setTab] = useState<Tab>('deposit');
   const [pick, setPick] = useState(false);
-  const connected = useStore((s) => s.connected);
-  const position = useStore((s) => s.user.positions[v.id]);
-  const value = m.positionValue(position, v);
 
   return (
     <div className="w-full max-w-[440px] mx-auto">
@@ -53,13 +50,6 @@ export function DepositCard({ vault: v, onVaultChange, initialAmount, showVaultL
           <DepositForm key={v.id} vault={v} onPick={() => setPick(true)} initialAmount={initialAmount} />
         ) : (
           <WithdrawForm key={v.id} vault={v} onPick={() => setPick(true)} />
-        )}
-
-        {connected && position && tab === 'deposit' && (
-          <button onClick={() => setTab('withdraw')} className="w-full flex items-center justify-between rounded border border-line hover:border-line-2 px-3 h-10 text-xs num transition-colors">
-            <span className="text-ink-2">You have <span className="text-ink">{fmtUsd(value, { compact: false })}</span> in this vault</span>
-            <span className="text-aqua font-medium">Withdraw →</span>
-          </button>
         )}
       </div>
       <VaultSelect open={pick} onClose={() => setPick(false)} onSelect={onVaultChange} selectedId={v.id} />
@@ -101,12 +91,10 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 /** Amount box with an inline token menu — the one thing the user touches. */
 function AmountBox({
-  value, onChange, token, tokens, onToken, balance, connected, usd, autoFocus, error, altLabel,
+  value, onChange, token, tokens, onToken, balance, connected, usd, autoFocus, error,
 }: {
   value: string; onChange: (s: string) => void; token: string; tokens: Array<{ id: string; label: string; balance?: number }>; onToken: (id: string) => void;
   balance?: number; connected: boolean; usd?: number; autoFocus?: boolean; error?: boolean;
-  /** When set, the token menu hides behind this small link instead of a pill dropdown. */
-  altLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const menu = tokens.length > 1;
@@ -133,10 +121,10 @@ function AmountBox({
           className="flex-1 min-w-0 bg-transparent display text-3xl num text-ink placeholder:text-ink-3 outline-none"
         />
         <div className="relative" ref={ref}>
-          <button onClick={() => menu && !altLabel && setOpen(!open)} className={cx('h-9 pl-2 pr-2.5 rounded-full bg-panel-2 border border-line inline-flex items-center gap-1.5 text-sm font-medium', menu && !altLabel && 'hover:border-line-2')}>
+          <button onClick={() => menu && setOpen(!open)} className={cx('h-9 pl-2 pr-2.5 rounded-full bg-panel-2 border border-line inline-flex items-center gap-1.5 text-sm font-medium', menu && 'hover:border-line-2')}>
             {token !== DUAL && <TokenIcon symbol={token} size={20} />}
             {current?.label ?? token}
-            {menu && !altLabel && <Chevron />}
+            {menu && <Chevron />}
           </button>
           {open && (
             <div className="absolute right-0 top-full mt-1 z-30 w-56 bg-panel-2 border border-line-2 rounded-md shadow-pop py-1 animate-fade-in">
@@ -152,14 +140,7 @@ function AmountBox({
         </div>
       </div>
       <div className="flex items-center justify-between mt-1 text-xs num">
-        <span className="text-ink-3">
-          {usd !== undefined && usd > 0 ? `≈ ${fmtUsd(usd, { compact: false, cents: true })}` : ''}
-          {menu && altLabel && (
-            <button onClick={() => setOpen(!open)} className={cx('hover:text-ink-2 underline decoration-line-2 underline-offset-2', !!usd && usd > 0 && 'ml-2')}>
-              {altLabel}
-            </button>
-          )}
-        </span>
+        <span className="text-ink-3">{usd !== undefined && usd > 0 ? `≈ ${fmtUsd(usd, { compact: false, cents: true })}` : ''}</span>
         {connected && balance !== undefined && (
           <span className="text-ink-3">
             Balance {fmtToken(balance)}
@@ -256,7 +237,7 @@ function DepositForm({ vault: v, onPick, initialAmount }: { vault: Vault; onPick
             <AmountBox value={amount1} onChange={setAmount1} token={v.token1} tokens={tokens.filter((t) => t.id === v.token1 || t.id === DUAL).map((t) => (t.id === DUAL ? { ...t, label: 'Single asset instead' } : t))} onToken={(id) => id === DUAL && setAsset('USDC')} balance={bal(v.token1)} connected={connected} usd={amt1 * TOKEN_PRICES[v.token1]} error={connected && amt1 > bal(v.token1)} />
           </div>
         ) : (
-          <AmountBox value={amount} onChange={setAmount} token={asset} tokens={tokens} onToken={(id) => { setAsset(id); setAmount(''); setAmount1(''); }} balance={bal(asset)} connected={connected} usd={preview?.inputUsd} autoFocus error={insufficient} altLabel={asset === 'USDC' ? `Use ${v.token0 === 'USDC' ? v.token1 : v.token0} or both tokens instead` : 'Change token'} />
+          <AmountBox value={amount} onChange={setAmount} token={asset} tokens={tokens} onToken={(id) => { setAsset(id); setAmount(''); setAmount1(''); }} balance={bal(asset)} connected={connected} usd={preview?.inputUsd} autoFocus error={insufficient} />
         )}
       </Field>
 
