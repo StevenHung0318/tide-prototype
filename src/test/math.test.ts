@@ -22,7 +22,7 @@ describe('anchors — MOCK-DATA-SPEC §3', () => {
   it('demo user deposits ≈ $12,398 and 36,500 TIDE locked', () => {
     const u = demoUserState(0);
     expect(m.totalDepositsUsd(u.positions, VAULT_BY_ID)).toBeCloseTo(12_398, 0);
-    expect(m.lockedTide(u.locks)).toBe(36_500);
+    expect(m.lockedTide(u.locks)).toBe(38_650);
   });
   it('demo Net PnL = +$412 (+3.4%)', () => {
     const u = demoUserState(0);

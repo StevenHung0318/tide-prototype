@@ -10,7 +10,7 @@ import { useStore } from '@/store/useStore';
 import { useUserDerived, useVaultApr } from '@/store/selectors';
 import { Stat, StatRow } from '@/components/ui/Stat';
 import { TokenPair } from '@/components/ui/TokenIcon';
-import { TideBadge } from '@/components/ui/TideBadge';
+import { BoostedApr } from '@/components/ui/BoostedApr';
 import { Button } from '@/components/ui/Button';
 import { AprBreakdown } from '@/components/vault/AprBreakdown';
 import { DepositModal } from '@/components/deposit/DepositModal';
@@ -148,8 +148,7 @@ function VaultRow({ vault: v, tvl, showMine, onDeposit }: { vault: Vault; tvl: n
       </td>
       <td className="px-3 py-3.5 text-right text-ink">{fmtUsd(tvl)}</td>
       <td ref={aprCell} className="px-3 py-3.5 text-right" onMouseEnter={onEnter} onMouseLeave={() => setHover(false)}>
-        <span className="display text-lg font-semibold text-ink">{fmtPct(b.totalApr)}</span>
-        <TideBadge className="ml-1.5 -translate-y-0.5" />
+        <BoostedApr value={fmtPct(b.totalApr)} className="display text-lg font-semibold" />
         {hover &&
           pop &&
           createPortal(

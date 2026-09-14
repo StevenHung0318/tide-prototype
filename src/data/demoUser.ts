@@ -31,6 +31,13 @@ export function demoUserState(now = Date.now()): UserState {
         unlockAt: now + 68 * DAY,
         redistributionEarned: 38.2,
       },
+      {
+        id: 'lock-demo-0',
+        amount: 2_150,
+        lockedAt: now - 95 * DAY,
+        unlockAt: now - 5 * DAY, // matured — shows the Unlock state
+        redistributionEarned: 12.6,
+      },
     ],
     tvlDelta: {},
     degenAcknowledged: false,

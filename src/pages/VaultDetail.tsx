@@ -16,7 +16,7 @@ import { CONSTANTS } from '@/lib/constants';
 import { useUserDerived } from '@/store/selectors';
 import { Button } from '@/components/ui/Button';
 import { Tooltip } from '@/components/ui/Tooltip';
-import { TideBadge } from '@/components/ui/TideBadge';
+import { BoostedApr } from '@/components/ui/BoostedApr';
 import { ClaimModal } from '@/components/rewards/ClaimModal';
 
 export function VaultDetail() {
@@ -57,11 +57,7 @@ function VaultView({ vaultId, market }: { vaultId: string; market: 'open' | 'clo
           <div className="relative cursor-help" onMouseEnter={() => setAprHover(true)} onMouseLeave={() => setAprHover(false)}>
             <Stat
               label="APR"
-              value={
-                <>
-                  {fmtPct(b.totalApr)} <TideBadge className="ml-1.5 -translate-y-0.5" />
-                </>
-              }
+              value={<BoostedApr value={fmtPct(b.totalApr)} />}
             />
             {aprHover && (
               <div className="absolute left-0 top-full mt-1 z-40 w-72 bg-panel-2 border border-line-2 rounded-md shadow-pop p-3 animate-fade-in">
