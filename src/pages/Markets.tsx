@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/Button';
 import { AprBreakdown } from '@/components/vault/AprBreakdown';
 import { DepositModal } from '@/components/deposit/DepositModal';
 import { ClaimModal } from '@/components/rewards/ClaimModal';
+import { LocksList } from '@/components/rewards/LocksList';
 
 
 export function Markets() {
@@ -24,20 +25,10 @@ export function Markets() {
   const depositVault = VAULT_BY_ID[params.get('deposit') ?? ''] ?? null;
   const claimOpen = params.get('claim') === '1';
   const locks = useStore((s) => s.user.locks);
-  const unlock = useStore((s) => s.unlock);
-  const pushToast = useStore((s) => s.pushToast);
-  const [unlocking, setUnlocking] = useState(false);
   const lockedTide = m.lockedTide(locks);
   const nextUnlock = locks.length ? Math.min(...locks.map((l) => l.unlockAt)) : null;
   const ready = locks.filter((l) => m.isUnlockable(l, Date.now()));
   const readyTide = ready.reduce((a, l) => a + l.amount + l.redistributionEarned, 0);
-  const unlockAll = async () => {
-    setUnlocking(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    for (const l of ready) unlock(l.id);
-    setUnlocking(false);
-    pushToast({ title: `Unlocked ${fmtToken(readyTide, 1)} TIDE`, tone: 'tide' });
-  };
   const lockLine =
     lockedTide <= 0
       ? 'Nothing locked'
@@ -76,12 +67,7 @@ export function Markets() {
                 </>
               }
             />
-            <div className="flex flex-col gap-1.5 shrink-0">
-              <Button size="sm" variant="tide" onClick={() => setParams({ claim: '1' })} disabled={d.pendingTide < 0.005}>Claim</Button>
-              {ready.length > 0 && (
-                <Button size="sm" variant="secondary" onClick={unlockAll} loading={unlocking}>Unlock</Button>
-              )}
-            </div>
+            <Button size="sm" variant="tide" className="shrink-0" onClick={() => setParams({ claim: '1' })} disabled={d.pendingTide < 0.005}>Claim</Button>
           </div>
         </StatRow>
       ) : (
@@ -90,6 +76,8 @@ export function Markets() {
           <Stat label="Fees earned (24h)" value={fmtUsd(m.dailyFees(VAULTS, tvlDelta), { compact: false })} />
         </StatRow>
       )}
+
+      {showMine && <LocksList />}
 
       <div className="flex items-center justify-between gap-4">
         <h1 className="display text-lg font-semibold">Vaults</h1>
