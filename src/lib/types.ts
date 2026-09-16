@@ -29,10 +29,10 @@ export interface Position {
 
 export interface Lock {
   id: string;
-  amount: number; // TIDE
+  amount: number; // PMG
   lockedAt: number;
   unlockAt: number;
-  redistributionEarned: number; // TIDE
+  redistributionEarned: number; // PMG
 }
 
 export type TxKind = 'deposit' | 'withdraw' | 'stake' | 'claim' | 'lock' | 'unlock';

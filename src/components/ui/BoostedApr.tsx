@@ -1,6 +1,6 @@
 import { cx } from '@/lib/format';
 
-/** APR that includes TIDE rewards — rendered as a charged, gradient number. */
+/** APR that includes PMG rewards — rendered as a charged, gradient number. */
 export function BoostedApr({ value, className }: { value: string; className?: string }) {
   return (
     <span className={cx('inline-flex items-center gap-1', className)}>

@@ -166,10 +166,10 @@ export const useStore = create<AppState>()(
               ...s.user,
               pendingTide: 0,
               pendingUpdatedAt: Date.now(),
-              balances: { ...s.user.balances, TIDE: (s.user.balances.TIDE ?? 0) + split.instant },
+              balances: { ...s.user.balances, PMG: (s.user.balances.PMG ?? 0) + split.instant },
             },
             'claim',
-            `Claimed ${Math.round(split.instant)} TIDE`,
+            `Claimed ${Math.round(split.instant)} PMG`,
           ),
         });
         return split.instant;
@@ -182,7 +182,7 @@ export const useStore = create<AppState>()(
         const now = Date.now();
         const lock: Lock = { id: uid(), amount, lockedAt: now, unlockAt: now + CONSTANTS.LOCK_DAYS * DAY, redistributionEarned: 0 };
         set({
-          user: record({ ...s.user, pendingTide: 0, pendingUpdatedAt: now, locks: [lock, ...s.user.locks] }, 'lock', `Locked ${Math.round(amount)} TIDE`),
+          user: record({ ...s.user, pendingTide: 0, pendingUpdatedAt: now, locks: [lock, ...s.user.locks] }, 'lock', `Locked ${Math.round(amount)} PMG`),
         });
         return lock;
       },
@@ -196,17 +196,17 @@ export const useStore = create<AppState>()(
               {
                 ...s.user,
                 locks: s.user.locks.filter((x) => x.id !== lockId),
-                balances: { ...s.user.balances, TIDE: (s.user.balances.TIDE ?? 0) + l.amount + l.redistributionEarned },
+                balances: { ...s.user.balances, PMG: (s.user.balances.PMG ?? 0) + l.amount + l.redistributionEarned },
               },
               'unlock',
-              `Unlocked ${Math.round(l.amount)} TIDE`,
+              `Unlocked ${Math.round(l.amount)} PMG`,
             ),
           };
         }),
 
       acknowledgeDegen: () => set((s) => ({ user: { ...s.user, degenAcknowledged: true } })),
 
-      /** Live accrual: pending TIDE grows at the vault's TIDE APR. */
+      /** Live accrual: pending PMG grows at the vault's PMG APR. */
       tickPending: (now) =>
         set((s) => {
           if (!s.connected) return {};

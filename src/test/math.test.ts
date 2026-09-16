@@ -9,17 +9,17 @@ const tsla = VAULT_BY_ID['tsla-usdc'];
 const dog = VAULT_BY_ID['dogtsla-usdc'];
 
 describe('anchors — MOCK-DATA-SPEC §3', () => {
-  it('tsla-usdc weekly emissions = 300,000 TIDE = $12,600', () => {
+  it('tsla-usdc weekly emissions = 300,000 PMG = $12,600', () => {
     expect(m.vaultWeeklyEmissions(tsla)).toBe(300_000);
     expect(m.vaultWeeklyEmissions(tsla) * CONSTANTS.TIDE_PRICE).toBeCloseTo(12_600, 6);
   });
-  it('tsla-usdc staked TVL = $3.57M, base TIDE APR ≈ 18.4%, total ≈ 32.6%', () => {
+  it('tsla-usdc staked TVL = $3.57M, base PMG APR ≈ 18.4%, total ≈ 32.6%', () => {
     expect(m.stakedTvl(tsla.tvl)).toBeCloseTo(3_570_000, 0);
     const b = m.aprBreakdown(tsla, tsla.tvl);
     expect(b.tideApr * 100).toBeCloseTo(18.4, 1);
     expect(b.totalApr * 100).toBeCloseTo(32.6, 1);
   });
-  it('demo user deposits ≈ $12,398 and 36,500 TIDE locked', () => {
+  it('demo user deposits ≈ $12,398 and 36,500 PMG locked', () => {
     const u = demoUserState(0);
     expect(m.totalDepositsUsd(u.positions, VAULT_BY_ID)).toBeCloseTo(12_398, 0);
     expect(m.lockedTide(u.locks)).toBe(38_650);
@@ -31,7 +31,7 @@ describe('anchors — MOCK-DATA-SPEC §3', () => {
     expect(value - cost).toBeCloseTo(412, 6);
     expect(((value - cost) / cost) * 100).toBeCloseTo(3.4, 1);
   });
-  it('pending 1,224 TIDE ≈ $51.4; claim now 612 / lock 1,224', () => {
+  it('pending 1,224 PMG ≈ $51.4; claim now 612 / lock 1,224', () => {
     const u = demoUserState(0);
     expect(u.pendingTide * CONSTANTS.TIDE_PRICE).toBeCloseTo(51.4, 1);
     const s = m.claimSplit(u.pendingTide);
@@ -42,7 +42,7 @@ describe('anchors — MOCK-DATA-SPEC §3', () => {
 });
 
 describe('APR consistency — checklist §7', () => {
-  it('total APR = fee + TIDE for every vault', () => {
+  it('total APR = fee + PMG for every vault', () => {
     for (const v of VAULTS) {
       const br = m.aprBreakdown(v, v.tvl);
       expect(br.totalApr).toBeCloseTo(br.feeApr + br.tideApr, 12);

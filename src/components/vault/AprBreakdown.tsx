@@ -9,7 +9,7 @@ interface Props {
   className?: string;
 }
 
-/** APR breakdown — fee APR + TIDE rewards APR. Rows sum by construction. */
+/** APR breakdown — fee APR + PMG rewards APR. Rows sum by construction. */
 export function AprBreakdown({ vault, compact, className }: Props) {
   const { breakdown: b } = useVaultApr(vault);
   return (
@@ -25,8 +25,8 @@ export function AprBreakdown({ vault, compact, className }: Props) {
       </div>
       <div className="flex items-center justify-between py-1">
         <span className="text-ink-2 inline-flex items-center gap-1.5">
-          TIDE rewards APR
-          <InfoDot tip="Paid in TIDE. Claim 50% instantly or lock 90 days for the full amount." />
+          PMG rewards APR
+          <InfoDot tip="Paid in PMG. Claim 50% instantly or lock 90 days for the full amount." />
         </span>
         <span className="font-medium text-tide">{fmtPct(b.tideApr)}</span>
       </div>

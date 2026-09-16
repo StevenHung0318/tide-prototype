@@ -14,7 +14,7 @@ type Metric = 'volumeUsd' | 'feesUsd' | 'revenueUsd' | 'buybacksUsd';
 const AQUA = '#244742';
 const GLASS = '#7BB8B2';
 const UP = '#28614F';
-const TIDE = '#F3A66E';
+const PMG = '#F3A66E';
 const POOL_FEE = 0.0025; // average swap fee tier across vaults
 
 interface Week { date: string; volumeUsd: number; feesUsd: number; revenueUsd: number; buybacksUsd: number; emissionsUsd: number }
@@ -57,7 +57,7 @@ export function Analytics() {
   const metrics: Array<{ k: Metric; label: string; color: string; tone?: 'aqua' | 'up' }> = [
     { k: 'volumeUsd', label: 'Volume', color: GLASS },
     { k: 'feesUsd', label: 'Fees', color: UP, tone: 'up' },
-    { k: 'revenueUsd', label: 'Revenue', color: TIDE },
+    { k: 'revenueUsd', label: 'Revenue', color: PMG },
     { k: 'buybacksUsd', label: 'Buybacks', color: AQUA, tone: 'aqua' },
   ];
 

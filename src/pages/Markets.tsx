@@ -34,8 +34,8 @@ export function Markets() {
     lockedTide <= 0
       ? 'Nothing locked'
       : ready.length
-        ? `${fmtToken(readyTide, 0)} TIDE ready to unlock`
-        : `${fmtToken(lockedTide, 0)} TIDE locked · next unlock in ${Math.max(0, Math.ceil(((nextUnlock ?? 0) - Date.now()) / 86_400_000))}d`;
+        ? `${fmtToken(readyTide, 0)} PMG ready to unlock`
+        : `${fmtToken(lockedTide, 0)} PMG locked · next unlock in ${Math.max(0, Math.ceil(((nextUnlock ?? 0) - Date.now()) / 86_400_000))}d`;
   const rows = useMemo(
     () =>
       VAULTS.filter((v) => vaultName(v).toLowerCase().replace(/\s/g, '').includes(q.toLowerCase().replace(/\s/g, '')))
@@ -60,8 +60,8 @@ export function Markets() {
           <Stat label="Fees earned" value={`+${fmtUsd(totalFees, { compact: false, cents: true })}`} tone="up" />
           <div className="flex items-center justify-between gap-3 min-w-0">
             <Stat
-              label="TIDE rewards"
-              value={`${fmtToken(d.pendingTide, 2)} TIDE`}
+              label="PMG rewards"
+              value={`${fmtToken(d.pendingTide, 2)} PMG`}
               tone="tide"
               sub={
                 <>

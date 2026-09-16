@@ -19,14 +19,14 @@ export function LocksList() {
     await new Promise((r) => setTimeout(r, 1500));
     unlock(id);
     setBusy(null);
-    pushToast({ title: 'Unlock confirmed', detail: `${fmtToken(amount, 1)} TIDE returned to your wallet`, tone: 'up' });
+    pushToast({ title: 'Unlock confirmed', detail: `${fmtToken(amount, 1)} PMG returned to your wallet`, tone: 'up' });
   };
 
   return (
     <section className="bg-panel border border-line rounded-lg p-4">
       <div className="flex items-center justify-between">
-        <h2 className="display text-sm font-semibold">Locked TIDE</h2>
-        <span className="text-xs num text-tide">{fmtToken(total, 0)} TIDE</span>
+        <h2 className="display text-sm font-semibold">Locked PMG</h2>
+        <span className="text-xs num text-tide">{fmtToken(total, 0)} PMG</span>
       </div>
       <ul className="divide-y divide-line mt-1">
         {[...locks].sort((a, b) => a.unlockAt - b.unlockAt).map((l) => {
@@ -36,7 +36,7 @@ export function LocksList() {
             <li key={l.id} className="py-3 text-sm num">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-ink font-medium">
-                  {fmtToken(l.amount, 1)} TIDE
+                  {fmtToken(l.amount, 1)} PMG
                   {l.redistributionEarned > 0 && <span className="text-2xs text-up ml-2">+{fmtToken(l.redistributionEarned, 1)} earned</span>}
                 </span>
                 {ready ? (
