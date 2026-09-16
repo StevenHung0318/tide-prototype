@@ -9,7 +9,7 @@ export const TOKEN_PRICES: Record<string, number> = {
   HOODx: 52.1,
   SUI: 3.85,
   DOGTSLA: 0.00184,
-  TIDE: 0.042,
+  PMG: 0.042,
 };
 
 export const TOKEN_COLORS: Record<string, string> = {
@@ -19,7 +19,7 @@ export const TOKEN_COLORS: Record<string, string> = {
   HOODx: '#00C805',
   SUI: '#4DA2FF',
   DOGTSLA: '#C9A227',
-  TIDE: '#8B9CF7',
+  PMG: '#8B9CF7',
 };
 
 export const TIER_CAPACITY: Record<Tier, number> = {

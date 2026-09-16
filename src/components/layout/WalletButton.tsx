@@ -33,7 +33,7 @@ export function WalletButton() {
     );
   }
 
-  const tide = balances.TIDE ?? 0;
+  const tide = balances.PMG ?? 0;
   return (
     <div className="relative" ref={ref}>
       <button
@@ -47,7 +47,7 @@ export function WalletButton() {
         <div className="absolute right-0 top-full mt-2 w-64 bg-panel-2 border border-line-2 rounded-md shadow-pop p-3 animate-fade-in z-40">
           <div className="text-2xs text-ink-3 mb-2 num">{DEMO_ADDRESS.slice(0, 22)}…</div>
           <div className="divide-y divide-line text-sm">
-            <Row token="TIDE" amount={tide} usd={tide * CONSTANTS.TIDE_PRICE} tide />
+            <Row token="PMG" amount={tide} usd={tide * CONSTANTS.TIDE_PRICE} tide />
             <Row token="USDC" amount={balances.USDC ?? 0} usd={balances.USDC ?? 0} />
             <Row token="TSLAx" amount={balances.TSLAx ?? 0} usd={(balances.TSLAx ?? 0) * TOKEN_PRICES.TSLAx} />
           </div>

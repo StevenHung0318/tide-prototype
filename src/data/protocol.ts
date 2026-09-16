@@ -12,7 +12,7 @@ export const PROTOCOL = {
     fromForfeits: 31_400,
     fromBuybacks: 16_800,
   },
-  /** Total TIDE currently locked protocol-wide (used to weight redistribution). */
+  /** Total PMG currently locked protocol-wide (used to weight redistribution). */
   totalLockedTide: 9_400_000,
   allocation: [
     { label: 'Community mining', pct: 0.5 },

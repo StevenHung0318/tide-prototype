@@ -52,7 +52,7 @@ components did not need to change; only the values did:
 | `aqua` | `#244742` deep teal | primary actions, in-range, APR |
 | `up` / `down` / `amber` | `#28614F` / `#A33832` / `#8B5A13` | success / negative / warning |
 | `apricot` / `glass` | `#F3A66E` / `#7BB8B2` | character colours (decorative; apricot + ink for secondary CTAs) |
-| `tide` | `#9A5A22` | TIDE-denominated numbers — apricot darkened for text contrast (not in the kit) |
+| `tide` | `#9A5A22` | PMG-denominated numbers — apricot darkened for text contrast (not in the kit) |
 
 Type is Rubik (400 / 500 / 700) via Google Fonts with tabular numerals. Cards use a 16 px radius, buttons a 12 px radius,
 and every action target is at least 36 px tall (44 px for primary CTAs). Wordmark SVGs and mascot crops live in `public/brand/`;

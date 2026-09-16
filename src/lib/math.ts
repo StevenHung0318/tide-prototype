@@ -20,7 +20,7 @@ export function stakedTvl(tvl: number): number {
   return tvl * CONSTANTS.STAKED_SHARE;
 }
 
-/** base TIDE APR = weekly emissions × price × 52 / staked TVL */
+/** base PMG APR = weekly emissions × price × 52 / staked TVL */
 export function baseTideApr(v: Vault, tvl: number = v.tvl): number {
   const s = stakedTvl(tvl);
   if (s <= 0) return 0;
@@ -30,7 +30,7 @@ export function baseTideApr(v: Vault, tvl: number = v.tvl): number {
 export interface AprBreakdown {
   feeApr: number;
   tideApr: number;
-  totalApr: number; // fee + TIDE — the same for every depositor
+  totalApr: number; // fee + PMG — the same for every depositor
 }
 
 export function aprBreakdown(v: Vault, tvl: number): AprBreakdown {
@@ -110,7 +110,7 @@ export function earnings7d(valueUsd: number, yourApr: number): number {
   return (valueUsd * yourApr * 7) / 365;
 }
 
-/** TIDE accrued per second across positions (rewards only, not fees). */
+/** PMG accrued per second across positions (rewards only, not fees). */
 export function pendingAccrualPerSecond(positions: Record<string, Position>, vaults: Record<string, Vault>, tvlDelta: Record<string, number>): number {
   let usdPerYear = 0;
   for (const [id, p] of Object.entries(positions)) {

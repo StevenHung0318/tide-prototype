@@ -16,7 +16,7 @@ export function demoUserState(now = Date.now()): UserState {
   const pnl = 412;
   const costTotal = total - pnl;
   return {
-    balances: { USDC: 25_000, TSLAx: 8.2, TIDE: 3_400 },
+    balances: { USDC: 25_000, TSLAx: 8.2, PMG: 3_400 },
     positions: {
       'tsla-usdc': { staked: 9_800, unstaked: 0, costBasis: (costTotal * tslaValue) / total, depositedAt: now - 41 * DAY },
       'sui-tsla': { staked: 2_540, unstaked: 0, costBasis: (costTotal * suiValue) / total, depositedAt: now - 19 * DAY },
@@ -47,7 +47,7 @@ export function demoUserState(now = Date.now()): UserState {
 
 export function emptyUserState(now = Date.now()): UserState {
   return {
-    balances: { USDC: 0, TSLAx: 0, TIDE: 0 },
+    balances: { USDC: 0, TSLAx: 0, PMG: 0 },
     positions: {},
     pendingTide: 0,
     pendingUpdatedAt: now,

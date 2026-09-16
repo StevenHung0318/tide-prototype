@@ -99,12 +99,12 @@ function YourPosition({ vault: v, tvl, onClaim }: { vault: Vault; tvl: number; o
       <h2 className="display text-sm font-semibold">Your position</h2>
       <div className="grid grid-cols-2 gap-x-4 gap-y-5 mt-4 num">
         <Big label="Value" value={fmtUsd(value, { compact: false, cents: true })} tip={`${fmtToken(m.positionTdlp(p), 1)} ${v.receiptSymbol} · deposited ${fmtDate(p.depositedAt)}`} />
-        <Big label="Your APR" value={fmtPct(b.totalApr)} tip={`${fmtPct(b.feeApr)} from fees + ${fmtPct(b.tideApr)} in TIDE`} />
+        <Big label="Your APR" value={fmtPct(b.totalApr)} tip={`${fmtPct(b.feeApr)} from fees + ${fmtPct(b.tideApr)} in PMG`} />
         <Big label="Fees earned" value={`+${fmtUsd(fees, { compact: false, cents: true })}`} tone="text-up" tip="Fees compound into your tdLP automatically. Nothing to claim." />
-        <Big label="TIDE rewards" value={`${fmtToken(d.pendingTide, 1)} TIDE`} tone="text-tide" tip={`≈ ${fmtUsd(d.pendingTide * CONSTANTS.TIDE_PRICE, { compact: false, cents: true })} across all your vaults`} />
+        <Big label="PMG rewards" value={`${fmtToken(d.pendingTide, 1)} PMG`} tone="text-tide" tip={`≈ ${fmtUsd(d.pendingTide * CONSTANTS.TIDE_PRICE, { compact: false, cents: true })} across all your vaults`} />
       </div>
       <Button block variant="tide" className="mt-5" onClick={onClaim} disabled={d.pendingTide < 0.005}>
-        {d.pendingTide < 0.005 ? 'No rewards to claim yet' : `Claim ${fmtToken(d.pendingTide, 1)} TIDE`}
+        {d.pendingTide < 0.005 ? 'No rewards to claim yet' : `Claim ${fmtToken(d.pendingTide, 1)} PMG`}
       </Button>
     </section>
   );

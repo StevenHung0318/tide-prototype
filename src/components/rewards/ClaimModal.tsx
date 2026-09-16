@@ -12,7 +12,7 @@ import { LocksList } from './LocksList';
 const TX_DELAY = 1500;
 type Choice = 'now' | 'lock';
 
-/** Claim pending TIDE: now at 50%, or lock 90 days for 100%. */
+/** Claim pending PMG: now at 50%, or lock 90 days for 100%. */
 export function ClaimModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   useEffect(() => {
     if (!open) return;
@@ -51,10 +51,10 @@ function Claim({ onDone }: { onDone: () => void }) {
     await new Promise((r) => setTimeout(r, TX_DELAY));
     if (choice === 'now') {
       const got = claimInstant();
-      pushToast({ title: 'Claim confirmed', detail: `${fmtToken(got, 1)} TIDE sent to your wallet`, tone: 'up' });
+      pushToast({ title: 'Claim confirmed', detail: `${fmtToken(got, 1)} PMG sent to your wallet`, tone: 'up' });
     } else {
       const lock = claimLock();
-      if (lock) pushToast({ title: 'Lock confirmed', detail: `${fmtToken(lock.amount, 1)} TIDE unlocks ${fmtDate(lock.unlockAt)}`, tone: 'up' });
+      if (lock) pushToast({ title: 'Lock confirmed', detail: `${fmtToken(lock.amount, 1)} PMG unlocks ${fmtDate(lock.unlockAt)}`, tone: 'up' });
     }
     setBusy(false);
     onDone();
@@ -64,10 +64,10 @@ function Claim({ onDone }: { onDone: () => void }) {
     <section className="bg-panel border border-line rounded-lg p-4 space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="display text-sm font-semibold">Pending rewards</h2>
-        <span className="text-xs text-ink-3 num">TIDE ${CONSTANTS.TIDE_PRICE.toFixed(3)}</span>
+        <span className="text-xs text-ink-3 num">PMG ${CONSTANTS.TIDE_PRICE.toFixed(3)}</span>
       </div>
       <div className="display num text-3xl font-semibold text-tide leading-none">
-        {fmtToken(d.pendingTide, 2)} <span className="text-lg">TIDE</span>
+        {fmtToken(d.pendingTide, 2)} <span className="text-lg">PMG</span>
         <span className="text-sm text-ink-2 font-normal ml-2">≈ {fmtUsd(d.pendingTide * CONSTANTS.TIDE_PRICE, { compact: false, cents: true })}</span>
       </div>
       <div className="grid grid-cols-2 gap-2">
@@ -75,9 +75,9 @@ function Claim({ onDone }: { onDone: () => void }) {
         <Option selected={choice === 'lock'} onSelect={() => setChoice('lock')} title="Lock 90 days" amount={split.locked} note="100% + share of forfeits" good />
       </div>
       <Button block size="lg" variant="tide" onClick={submit} disabled={empty} loading={busy}>
-        {busy ? 'Confirming…' : empty ? 'Nothing to claim yet' : choice === 'now' ? `Claim ${fmtToken(split.instant, 1)} TIDE` : `Lock ${fmtToken(split.locked, 1)} TIDE`}
+        {busy ? 'Confirming…' : empty ? 'Nothing to claim yet' : choice === 'now' ? `Claim ${fmtToken(split.instant, 1)} PMG` : `Lock ${fmtToken(split.locked, 1)} PMG`}
       </Button>
-      <div className="text-2xs text-ink-3 num">Lockers share this week's pool of {fmtInt(pool)} TIDE from forfeits and buybacks.</div>
+      <div className="text-2xs text-ink-3 num">Lockers share this week's pool of {fmtInt(pool)} PMG from forfeits and buybacks.</div>
     </section>
   );
 }
@@ -86,7 +86,7 @@ function Option({ selected, onSelect, title, amount, note, good }: { selected: b
   return (
     <button onClick={onSelect} aria-pressed={selected} className={cx('text-left rounded-md border px-3 py-2.5 transition-colors', selected ? 'border-tide bg-tide/[0.07]' : 'border-line hover:border-line-2 bg-deep')}>
       <div className="text-xs text-ink-2">{title}</div>
-      <div className={cx('display num text-xl font-semibold mt-0.5', selected ? 'text-tide' : 'text-ink')}>{fmtToken(amount, 1)} <span className="text-xs font-normal">TIDE</span></div>
+      <div className={cx('display num text-xl font-semibold mt-0.5', selected ? 'text-tide' : 'text-ink')}>{fmtToken(amount, 1)} <span className="text-xs font-normal">PMG</span></div>
       <div className={cx('text-2xs mt-1', good ? 'text-up' : 'text-ink-3')}>{note}</div>
     </button>
   );

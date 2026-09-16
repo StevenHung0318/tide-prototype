@@ -6,7 +6,7 @@ export const CONSTANTS = {
   INSTANT_CLAIM_RATIO: 0.5, // instant claim receives 50%
   LOCK_DAYS: 90,
   WEEKLY_EMISSIONS_TIDE: 1_000_000,
-  /** Prototype simplification: share of vault TVL assumed staked for TIDE. */
+  /** Prototype simplification: share of vault TVL assumed staked for PMG. */
   STAKED_SHARE: 0.85,
   /** Zap swap fee (fraction of the swapped leg). */
   SWAP_FEE: 0.0015,

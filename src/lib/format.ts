@@ -39,7 +39,7 @@ export function fmtToken(v: number, maxDecimals = 4): string {
   return new Intl.NumberFormat('en-US', { maximumFractionDigits: decimals, minimumFractionDigits: 0 }).format(v);
 }
 
-/** Whole-number token counts (e.g. TIDE emissions). */
+/** Whole-number token counts (e.g. PMG emissions). */
 export function fmtInt(v: number): string {
   return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(v);
 }

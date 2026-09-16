@@ -45,7 +45,7 @@ describe('store — cross-page consistency after actions (checklist §7)', () =>
     const s = useStore.getState();
     expect(got).toBeCloseTo(pending * 0.5, 9);
     expect(s.user.pendingTide).toBe(0);
-    expect(s.user.balances.TIDE).toBeCloseTo(3_400 + got, 9);
+    expect(s.user.balances.PMG).toBeCloseTo(3_400 + got, 9);
     expect(s.forfeitsAdded).toBeCloseTo(pending * 0.5, 9);
     const forfeits = PROTOCOL.redistribution.fromForfeits + s.forfeitsAdded;
     expect(forfeits + PROTOCOL.redistribution.fromBuybacks).toBeCloseTo(48_200 + pending * 0.5, 9);
