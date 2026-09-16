@@ -223,7 +223,7 @@ export const useStore = create<AppState>()(
       dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
     }),
     {
-      name: 'tide-demo-v1',
+      name: 'poolmigo-demo-v1',
       storage: createJSONStorage(() => (typeof localStorage !== 'undefined' ? localStorage : memoryStorage)),
       partialize: (s) => ({
         connected: s.connected,

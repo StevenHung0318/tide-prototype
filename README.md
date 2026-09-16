@@ -20,7 +20,7 @@ npm run build      # tsc + vite build
 | Open the deposit modal on Explore | `/?deposit=tsla-usdc` |
 | Open the claim modal on Explore | `/?claim=1` |
 
-State is persisted to `localStorage` under `tide-demo-v1`.
+State is persisted to `localStorage` under `poolmigo-demo-v1`.
 
 ## Where things live
 
