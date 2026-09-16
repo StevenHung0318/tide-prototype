@@ -2,7 +2,8 @@ import { useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { VAULTS, VAULT_BY_ID, vaultName } from '@/data/vaults';
-import { CHAINS } from '@/data/chains';
+import { CHAINS, type ChainId } from '@/data/chains';
+import { ChainFilter } from '@/components/ui/ChainFilter';
 import * as m from '@/lib/math';
 import { cx, fmtPct, fmtToken, fmtUsd } from '@/lib/format';
 import { CONSTANTS } from '@/lib/constants';
@@ -24,6 +25,7 @@ export function Markets() {
   const tvlDelta = useStore((s) => s.user.tvlDelta);
   const d = useUserDerived();
   const [q, setQ] = useState('');
+  const [chain, setChain] = useState<ChainId | 'all'>('all');
   const [sort, setSort] = useState<{ key: 'tvl' | 'apr'; dir: 'asc' | 'desc' }>({ key: 'tvl', dir: 'desc' });
   const toggleSort = (key: 'tvl' | 'apr') => setSort((s) => (s.key === key ? { key, dir: s.dir === 'desc' ? 'asc' : 'desc' } : { key, dir: 'desc' }));
   const [params, setParams] = useSearchParams();
@@ -42,10 +44,11 @@ export function Markets() {
         : `${fmtToken(lockedTide, 0)} PMG locked · next unlock in ${Math.max(0, Math.ceil(((nextUnlock ?? 0) - Date.now()) / 86_400_000))}d`;
   const rows = useMemo(
     () =>
-      VAULTS.filter((v) => `${vaultName(v)} ${CHAINS[v.chain].name}`.toLowerCase().replace(/\s/g, '').includes(q.toLowerCase().replace(/\s/g, '')))
+      VAULTS.filter((v) => chain === 'all' || v.chain === chain)
+        .filter((v) => `${vaultName(v)} ${CHAINS[v.chain].name}`.toLowerCase().replace(/\s/g, '').includes(q.toLowerCase().replace(/\s/g, '')))
         .map((v) => ({ v, tvl: m.effectiveTvl(v, tvlDelta), apr: m.aprBreakdown(v, m.effectiveTvl(v, tvlDelta)).totalApr }))
         .sort((a, b) => (sort.dir === 'desc' ? b[sort.key] - a[sort.key] : a[sort.key] - b[sort.key])),
-    [q, tvlDelta, sort],
+    [q, chain, tvlDelta, sort],
   );
   const showMine = d.connected && d.hasPositions;
   const positions = useStore((s) => s.user.positions);
@@ -85,6 +88,8 @@ export function Markets() {
 
       <div className="flex items-center justify-between gap-4">
         <h1 className="display text-lg font-semibold">Vaults</h1>
+        <div className="flex items-center gap-2">
+        <ChainFilter value={chain} onChange={setChain} />
         <div className="relative">
           <svg viewBox="0 0 16 16" className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-ink-3" fill="none" aria-hidden>
             <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.5" />
@@ -94,8 +99,9 @@ export function Markets() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search vaults"
-            className="h-8 w-56 pl-8 pr-3 rounded bg-panel border border-line focus:border-line-2 outline-none text-sm placeholder:text-ink-3"
+            className="h-10 w-56 pl-8 pr-3 rounded-md bg-panel border border-line focus:border-line-2 outline-none text-sm placeholder:text-ink-3"
           />
+        </div>
         </div>
       </div>
 
@@ -116,7 +122,7 @@ export function Markets() {
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-sm text-ink-3">No vaults match "{q}".</td>
+                <td colSpan={5} className="px-4 py-8 text-center text-sm text-ink-3">No vaults match{q ? ` "${q}"` : ''}{chain !== 'all' ? ` on ${CHAINS[chain].name}` : ''}.</td>
               </tr>
             )}
           </tbody>
