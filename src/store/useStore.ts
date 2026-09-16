@@ -15,6 +15,7 @@ export interface Toast {
 }
 
 export type MarketOverride = 'auto' | 'open' | 'closed';
+export type Theme = 'light' | 'dark';
 
 interface AppState {
   connected: boolean;
@@ -24,12 +25,14 @@ interface AppState {
   /** Instant-claim forfeits added to this week's redistribution pool by the demo user. */
   forfeitsAdded: number;
   marketOverride: MarketOverride;
+  theme: Theme;
   toasts: Toast[];
 
   connect: () => Promise<void>;
   disconnect: () => void;
   reset: () => void;
   setMarketOverride: (o: MarketOverride) => void;
+  setTheme: (t: Theme) => void;
 
   deposit: (args: { vaultId: string; preview: ZapPreview; stake: boolean; spend: Array<{ token: string; amount: number }> }) => void;
   withdraw: (args: { vaultId: string; preview: WithdrawPreview }) => void;
@@ -70,6 +73,7 @@ export const useStore = create<AppState>()(
       user: emptyUserState(),
       forfeitsAdded: 0,
       marketOverride: 'auto',
+      theme: 'light',
       toasts: [],
 
       connect: async () => {
@@ -90,6 +94,7 @@ export const useStore = create<AppState>()(
       reset: () => set({ connected: false, connecting: false, initialized: false, user: emptyUserState(), forfeitsAdded: 0, toasts: [] }),
 
       setMarketOverride: (o) => set({ marketOverride: o }),
+      setTheme: (t) => set({ theme: t }),
 
       deposit: ({ vaultId, preview, stake, spend }) => {
         const v = VAULT_BY_ID[vaultId];
@@ -231,6 +236,7 @@ export const useStore = create<AppState>()(
         user: s.user,
         forfeitsAdded: s.forfeitsAdded,
         marketOverride: s.marketOverride,
+        theme: s.theme,
       }),
     },
   ),

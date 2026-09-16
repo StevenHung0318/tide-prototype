@@ -7,14 +7,11 @@ import { emissionsSeries, hashSeed, mulberry32 } from '@/lib/series';
 import { cx, fmtPct, fmtPctSigned, fmtUsd } from '@/lib/format';
 import { Segmented } from '@/components/ui/Tabs';
 import { Stat, StatRow } from '@/components/ui/Stat';
+import { usePalette } from '@/lib/theme';
 
 type Window = 'week' | 'all';
 type Metric = 'volumeUsd' | 'feesUsd' | 'revenueUsd' | 'buybacksUsd';
 
-const AQUA = '#244742';
-const GLASS = '#7BB8B2';
-const UP = '#28614F';
-const PMG = '#F3A66E';
 const POOL_FEE = 0.0025; // average swap fee tier across vaults
 
 interface Week { date: string; volumeUsd: number; feesUsd: number; revenueUsd: number; buybacksUsd: number; emissionsUsd: number }
@@ -45,6 +42,8 @@ function useWeeks(): Week[] {
 }
 
 export function Analytics() {
+  const pal = usePalette();
+  const AQUA = pal.aqua, GLASS = pal.glass, UP = pal.up, PMG = pal.apricot;
   const [win, setWin] = useState<Window>('week');
   const weeks = useWeeks();
   const last = weeks[weeks.length - 1];
@@ -118,6 +117,7 @@ function Tile({ label, value, sub, tone }: { label: string; value: string; sub?:
 }
 
 function BarCard({ title, data, k, color }: { title: string; data: Week[]; k: Metric; color: string }) {
+  const pal = usePalette();
   const lastIdx = data.length - 1;
   const total = data.reduce((a, w) => a + w[k], 0);
   return (
@@ -129,9 +129,9 @@ function BarCard({ title, data, k, color }: { title: string; data: Week[]; k: Me
       <div className="h-40 mt-4">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 4, right: 0, bottom: 0, left: 0 }} barCategoryGap="30%">
-            <XAxis dataKey="date" tick={{ fill: '#8F8981', fontSize: 11 }} tickLine={false} axisLine={false} ticks={[data[0].date, data[4].date, data[lastIdx].date]} />
+            <XAxis dataKey="date" tick={{ fill: pal.ink3, fontSize: 11 }} tickLine={false} axisLine={false} ticks={[data[0].date, data[4].date, data[lastIdx].date]} />
             <RTooltip
-              cursor={{ fill: '#F6EFE4' }}
+              cursor={{ fill: pal.panel2 }}
               content={({ active, payload }) => {
                 if (!active || !payload?.length) return null;
                 const p = payload[0].payload as Week;

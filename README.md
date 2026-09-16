@@ -19,6 +19,7 @@ npm run build      # tsc + vite build
 | Force US market status | `?market=closed` / `?market=open` / `?market=auto` (persists until changed) |
 | Open the deposit modal on Explore | `/?deposit=tsla-usdc` |
 | Open the claim modal on Explore | `/?claim=1` |
+| Force a theme | `?theme=dark` / `?theme=light` (persists; header toggle does the same) |
 
 State is persisted to `localStorage` under `poolmigo-demo-v1`.
 

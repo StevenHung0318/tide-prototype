@@ -6,10 +6,7 @@ import type { MarketStatus } from '@/lib/market';
 import { priceSeriesHourly } from '@/lib/series';
 import { fmtQuote, fmtRelativeDays } from '@/lib/format';
 
-const AQUA = '#244742';
-const AMBER = '#8B5A13';
-const RED = '#A33832';
-const INK = '#302823';
+import { usePalette } from '@/lib/theme';
 
 interface Props {
   vault: Vault;
@@ -31,6 +28,8 @@ function precisionFor(p: number): number {
  * range is the shaded band with Upper/Lower marked on the axis.
  */
 export function PriceRange({ vault: v, market }: Props) {
+  const pal = usePalette();
+  const AQUA = pal.aqua, AMBER = pal.amber, RED = pal.down, INK = pal.ink;
   const g = m.rangeGeometry(v, market);
   const inBand = v.currentPrice >= g.lower && v.currentPrice <= g.upper;
   const tone = g.defensive ? AMBER : AQUA;
@@ -50,19 +49,19 @@ export function PriceRange({ vault: v, market }: Props) {
     const precision = precisionFor(v.currentPrice);
     const c = createChart(host.current, {
       autoSize: true,
-      layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: '#8F8981', fontFamily: 'Rubik, Arial, sans-serif', fontSize: 11, attributionLogo: false },
-      grid: { vertLines: { color: '#F1ECE3' }, horzLines: { color: '#F1ECE3' } },
-      rightPriceScale: { borderColor: '#DDD9D1', scaleMargins: { top: 0.12, bottom: 0.12 } },
-      timeScale: { borderColor: '#DDD9D1', timeVisible: true, secondsVisible: false, rightOffset: 4 },
-      crosshair: { horzLine: { color: '#8F8981', labelBackgroundColor: '#302823' }, vertLine: { color: '#8F8981', labelBackgroundColor: '#302823' } },
+      layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: pal.ink3, fontFamily: 'Rubik, Arial, sans-serif', fontSize: 11, attributionLogo: false },
+      grid: { vertLines: { color: pal.grid }, horzLines: { color: pal.grid } },
+      rightPriceScale: { borderColor: pal.line, scaleMargins: { top: 0.12, bottom: 0.12 } },
+      timeScale: { borderColor: pal.line, timeVisible: true, secondsVisible: false, rightOffset: 4 },
+      crosshair: { horzLine: { color: pal.ink3, labelBackgroundColor: pal.ink2 }, vertLine: { color: pal.ink3, labelBackgroundColor: pal.ink2 } },
       localization: { priceFormatter: (p: number) => fmtQuote(p) },
     });
     const bandSeries = c.addSeries(BaselineSeries, {
       baseValue: { type: 'price', price: g.lower },
       topLineColor: 'rgba(0,0,0,0)',
       bottomLineColor: 'rgba(0,0,0,0)',
-      topFillColor1: 'rgba(36,71,66,0.12)',
-      topFillColor2: 'rgba(36,71,66,0.12)',
+      topFillColor1: 'rgba(0,0,0,0)',
+      topFillColor2: 'rgba(0,0,0,0)',
       bottomFillColor1: 'rgba(0,0,0,0)',
       bottomFillColor2: 'rgba(0,0,0,0)',
       lastValueVisible: false,
@@ -73,8 +72,8 @@ export function PriceRange({ vault: v, market }: Props) {
     const priceSeries = c.addSeries(AreaSeries, {
       lineColor: INK,
       lineWidth: 2,
-      topColor: 'rgba(48,40,35,0.08)',
-      bottomColor: 'rgba(48,40,35,0)',
+      topColor: 'rgba(0,0,0,0)',
+      bottomColor: 'rgba(0,0,0,0)',
       lastValueVisible: false,
       priceLineVisible: false,
       crosshairMarkerRadius: 4,
@@ -104,7 +103,7 @@ export function PriceRange({ vault: v, market }: Props) {
       lines.current = [];
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [v.id, data]);
+  }, [v.id, data, pal]);
 
   // Apply range band, Upper/Lower price lines and the last-price colour whenever geometry changes.
   useEffect(() => {
