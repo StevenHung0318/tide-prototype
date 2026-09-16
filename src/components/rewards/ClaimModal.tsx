@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { PROTOCOL } from '@/data/protocol';
 import { CONSTANTS } from '@/lib/constants';
 import * as m from '@/lib/math';
@@ -20,15 +21,16 @@ export function ClaimModal({ open, onClose }: { open: boolean; onClose: () => vo
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
   if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-40 flex items-start justify-center p-4 pt-16 overflow-y-auto" role="dialog" aria-modal>
-      <div className="absolute inset-0 bg-deep/80" onClick={onClose} />
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-16 overflow-y-auto" role="dialog" aria-modal>
+      <div className="absolute inset-0 bg-ink/40" onClick={onClose} />
       <div className="relative w-full max-w-[440px] animate-fade-in space-y-3">
         <button onClick={onClose} className="absolute -top-8 right-0 text-xs text-ink-3 hover:text-ink" aria-label="Close">Close ✕</button>
         <Claim onDone={onClose} />
         <LocksList />
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -49,10 +51,10 @@ function Claim({ onDone }: { onDone: () => void }) {
     await new Promise((r) => setTimeout(r, TX_DELAY));
     if (choice === 'now') {
       const got = claimInstant();
-      pushToast({ title: `Claimed ${fmtToken(got, 1)} TIDE`, tone: 'tide' });
+      pushToast({ title: 'Claim confirmed', detail: `${fmtToken(got, 1)} TIDE sent to your wallet`, tone: 'up' });
     } else {
       const lock = claimLock();
-      if (lock) pushToast({ title: `Locked ${fmtToken(lock.amount, 1)} TIDE for 90 days`, detail: `Unlocks ${fmtDate(lock.unlockAt)}`, tone: 'tide' });
+      if (lock) pushToast({ title: 'Lock confirmed', detail: `${fmtToken(lock.amount, 1)} TIDE unlocks ${fmtDate(lock.unlockAt)}`, tone: 'up' });
     }
     setBusy(false);
     onDone();

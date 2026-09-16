@@ -6,10 +6,10 @@ import type { MarketStatus } from '@/lib/market';
 import { priceSeriesHourly } from '@/lib/series';
 import { fmtQuote, fmtRelativeDays } from '@/lib/format';
 
-const AQUA = '#39D0C4';
-const AMBER = '#F5B14C';
-const RED = '#F87171';
-const INK = '#E6EBF5';
+const AQUA = '#244742';
+const AMBER = '#8B5A13';
+const RED = '#A33832';
+const INK = '#302823';
 
 interface Props {
   vault: Vault;
@@ -50,19 +50,19 @@ export function PriceRange({ vault: v, market }: Props) {
     const precision = precisionFor(v.currentPrice);
     const c = createChart(host.current, {
       autoSize: true,
-      layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: '#6B7690', fontFamily: 'Inter, system-ui, sans-serif', fontSize: 11, attributionLogo: false },
-      grid: { vertLines: { color: 'rgba(35,46,68,0.5)' }, horzLines: { color: 'rgba(35,46,68,0.5)' } },
-      rightPriceScale: { borderColor: '#232E44', scaleMargins: { top: 0.12, bottom: 0.12 } },
-      timeScale: { borderColor: '#232E44', timeVisible: true, secondsVisible: false, rightOffset: 4 },
-      crosshair: { horzLine: { color: '#6B7690', labelBackgroundColor: '#2E3B55' }, vertLine: { color: '#6B7690', labelBackgroundColor: '#2E3B55' } },
+      layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: '#8F8981', fontFamily: 'Rubik, Arial, sans-serif', fontSize: 11, attributionLogo: false },
+      grid: { vertLines: { color: '#F1ECE3' }, horzLines: { color: '#F1ECE3' } },
+      rightPriceScale: { borderColor: '#DDD9D1', scaleMargins: { top: 0.12, bottom: 0.12 } },
+      timeScale: { borderColor: '#DDD9D1', timeVisible: true, secondsVisible: false, rightOffset: 4 },
+      crosshair: { horzLine: { color: '#8F8981', labelBackgroundColor: '#302823' }, vertLine: { color: '#8F8981', labelBackgroundColor: '#302823' } },
       localization: { priceFormatter: (p: number) => fmtQuote(p) },
     });
     const bandSeries = c.addSeries(BaselineSeries, {
       baseValue: { type: 'price', price: g.lower },
       topLineColor: 'rgba(0,0,0,0)',
       bottomLineColor: 'rgba(0,0,0,0)',
-      topFillColor1: 'rgba(57,208,196,0.16)',
-      topFillColor2: 'rgba(57,208,196,0.16)',
+      topFillColor1: 'rgba(36,71,66,0.12)',
+      topFillColor2: 'rgba(36,71,66,0.12)',
       bottomFillColor1: 'rgba(0,0,0,0)',
       bottomFillColor2: 'rgba(0,0,0,0)',
       lastValueVisible: false,
@@ -73,8 +73,8 @@ export function PriceRange({ vault: v, market }: Props) {
     const priceSeries = c.addSeries(AreaSeries, {
       lineColor: INK,
       lineWidth: 2,
-      topColor: 'rgba(230,235,245,0.10)',
-      bottomColor: 'rgba(230,235,245,0)',
+      topColor: 'rgba(48,40,35,0.08)',
+      bottomColor: 'rgba(48,40,35,0)',
       lastValueVisible: false,
       priceLineVisible: false,
       crosshairMarkerRadius: 4,
@@ -119,8 +119,8 @@ export function PriceRange({ vault: v, market }: Props) {
     };
     b.applyOptions({
       baseValue: { type: 'price', price: g.lower },
-      topFillColor1: rgba(tone, 0.16),
-      topFillColor2: rgba(tone, 0.16),
+      topFillColor1: rgba(tone, 0.12),
+      topFillColor2: rgba(tone, 0.12),
       // keep both bounds in view on autoscale; the user can still drag the axis
       autoscaleInfoProvider: () => ({ priceRange: { minValue: g.lower, maxValue: g.upper } }),
     });
@@ -134,7 +134,7 @@ export function PriceRange({ vault: v, market }: Props) {
   }, [g.lower, g.upper, tone, priceTone, data]);
 
   return (
-    <section className="bg-panel border border-line rounded-md">
+    <section className="bg-panel border border-line rounded-lg">
       <header className="flex items-center justify-between px-4 h-11 border-b border-line">
         <h3 className="display text-sm font-semibold">Price range</h3>
         <span className="text-xs text-ink-3 num">Last rebalance {fmtRelativeDays(v.lastRebalanceDaysAgo)}</span>

@@ -26,8 +26,8 @@ export function Layout() {
       </main>
       <footer className="border-t border-line">
         <div className="mx-auto max-w-[1280px] px-4 md:px-6 h-12 flex items-center justify-between text-2xs text-ink-3">
-          <span>Tide on Robinhood Chain · Prototype with mock data</span>
-          <span>Water Labs</span>
+          <span>Poolmigo on Robinhood Chain · Prototype with mock data</span>
+          <span>LP positions can lose value and may underperform holding the assets.</span>
         </div>
       </footer>
       <ToastHost />

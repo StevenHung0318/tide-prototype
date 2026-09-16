@@ -4,7 +4,7 @@ import type { RangeStatus, Tier } from '@/lib/types';
 
 const tierStyles: Record<Tier, string> = {
   Core: 'border-aqua/60 text-aqua',
-  Turbo: 'border-tide/60 text-tide',
+  Turbo: 'border-glass text-aqua',
   Degen: 'border-amber/60 text-amber',
 };
 

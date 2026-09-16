@@ -27,7 +27,7 @@ export function WalletButton() {
 
   if (!connected) {
     return (
-      <Button size="sm" className="h-8" onClick={() => connect()} loading={connecting}>
+      <Button size="sm" onClick={() => connect()} loading={connecting}>
         {connecting ? 'Connecting' : 'Connect wallet'}
       </Button>
     );
@@ -38,9 +38,9 @@ export function WalletButton() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="h-8 px-2.5 rounded border border-line-2 bg-panel-2 text-xs num text-ink hover:border-ink-3 inline-flex items-center gap-2"
+        className="h-9 px-3 rounded-md border border-line-2 bg-panel text-xs num text-ink hover:border-ink-3 inline-flex items-center gap-2"
       >
-        <span className="h-4 w-4 rounded-full bg-gradient-to-br from-aqua to-tide" />
+        <span className="h-4 w-4 rounded-full bg-gradient-to-br from-glass to-apricot" />
         {shortAddress(DEMO_ADDRESS)}
       </button>
       {open && (

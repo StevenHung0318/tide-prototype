@@ -11,10 +11,10 @@ import { Stat, StatRow } from '@/components/ui/Stat';
 type Window = 'week' | 'all';
 type Metric = 'volumeUsd' | 'feesUsd' | 'revenueUsd' | 'buybacksUsd';
 
-const AQUA = '#39D0C4';
-const INK = '#A6B0C3';
-const UP = '#4ADE80';
-const TIDE = '#8B9CF7';
+const AQUA = '#244742';
+const GLASS = '#7BB8B2';
+const UP = '#28614F';
+const TIDE = '#F3A66E';
 const POOL_FEE = 0.0025; // average swap fee tier across vaults
 
 interface Week { date: string; volumeUsd: number; feesUsd: number; revenueUsd: number; buybacksUsd: number; emissionsUsd: number }
@@ -55,7 +55,7 @@ export function Analytics() {
   const coverage = m.buybackCoverage(pick('buybacksUsd'), win === 'week' ? last.emissionsUsd : sum('emissionsUsd'));
 
   const metrics: Array<{ k: Metric; label: string; color: string; tone?: 'aqua' | 'up' }> = [
-    { k: 'volumeUsd', label: 'Volume', color: INK },
+    { k: 'volumeUsd', label: 'Volume', color: GLASS },
     { k: 'feesUsd', label: 'Fees', color: UP, tone: 'up' },
     { k: 'revenueUsd', label: 'Revenue', color: TIDE },
     { k: 'buybacksUsd', label: 'Buybacks', color: AQUA, tone: 'aqua' },
@@ -67,11 +67,11 @@ export function Analytics() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="display text-2xl font-semibold">Protocol analytics</h1>
-            <p className="text-sm text-ink-2 mt-1">Tide vaults on Robinhood Chain.</p>
+            <p className="text-sm text-ink-2 mt-1">Poolmigo vaults on Robinhood Chain.</p>
           </div>
           <Segmented<Window> size="sm" value={win} onChange={setWin} options={[{ value: 'week', label: 'This week' }, { value: 'all', label: '8 weeks' }]} />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 bg-deep border border-line rounded-md divide-x divide-line">
+        <div className="grid grid-cols-2 md:grid-cols-4 bg-deep border border-line rounded-lg divide-x divide-line">
           {metrics.map((mt) => (
             <Tile
               key={mt.k}
@@ -129,14 +129,14 @@ function BarCard({ title, data, k, color }: { title: string; data: Week[]; k: Me
       <div className="h-40 mt-4">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 4, right: 0, bottom: 0, left: 0 }} barCategoryGap="30%">
-            <XAxis dataKey="date" tick={{ fill: '#6B7690', fontSize: 11 }} tickLine={false} axisLine={false} ticks={[data[0].date, data[4].date, data[lastIdx].date]} />
+            <XAxis dataKey="date" tick={{ fill: '#8F8981', fontSize: 11 }} tickLine={false} axisLine={false} ticks={[data[0].date, data[4].date, data[lastIdx].date]} />
             <RTooltip
-              cursor={{ fill: '#1C2638' }}
+              cursor={{ fill: '#F6EFE4' }}
               content={({ active, payload }) => {
                 if (!active || !payload?.length) return null;
                 const p = payload[0].payload as Week;
                 return (
-                  <div className="bg-panel-2 border border-line-2 rounded shadow-pop px-2.5 py-1.5 text-xs num">
+                  <div className="bg-panel border border-line rounded-md shadow-pop px-2.5 py-1.5 text-xs num">
                     <div className="text-ink-3">Week of {p.date}</div>
                     <div className="text-ink font-medium">{fmtUsd(p[k], { compact: p[k] >= 1_000_000 })}</div>
                   </div>

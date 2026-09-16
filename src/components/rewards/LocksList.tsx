@@ -19,7 +19,7 @@ export function LocksList() {
     await new Promise((r) => setTimeout(r, 1500));
     unlock(id);
     setBusy(null);
-    pushToast({ title: `Unlocked ${fmtToken(amount, 1)} TIDE`, tone: 'tide' });
+    pushToast({ title: 'Unlock confirmed', detail: `${fmtToken(amount, 1)} TIDE returned to your wallet`, tone: 'up' });
   };
 
   return (

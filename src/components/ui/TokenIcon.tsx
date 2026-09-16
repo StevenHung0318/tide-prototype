@@ -2,12 +2,12 @@ import { TOKEN_COLORS } from '@/data/vaults';
 import { cx } from '@/lib/format';
 
 export function TokenIcon({ symbol, size = 22, className }: { symbol: string; size?: number; className?: string }) {
-  const color = TOKEN_COLORS[symbol] ?? '#6B7690';
+  const color = TOKEN_COLORS[symbol] ?? '#8F8981';
   const letter = symbol.replace(/x$/, '').slice(0, 1);
   return (
     <span
       className={cx('inline-flex items-center justify-center rounded-full font-display font-semibold text-white shrink-0', className)}
-      style={{ width: size, height: size, background: color, fontSize: size * 0.48, boxShadow: '0 0 0 2px #161E2E' }}
+      style={{ width: size, height: size, background: color, fontSize: size * 0.48, boxShadow: '0 0 0 2px #FFFFFF' }}
       title={symbol}
     >
       {letter}

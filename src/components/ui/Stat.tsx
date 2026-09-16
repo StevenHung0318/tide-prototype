@@ -43,7 +43,7 @@ export function StatRow({ children, className, cols = 4 }: { children: ReactNode
   return (
     <div
       className={cx(
-        'grid grid-cols-2 bg-panel border border-line rounded-md divide-x divide-line [&>*]:px-4 [&>*]:py-3',
+        'grid grid-cols-2 bg-panel border border-line rounded-lg divide-x divide-line [&>*]:px-4 [&>*]:py-3',
         cols === 2 ? 'md:grid-cols-2' : cols === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4',
         className,
       )}
