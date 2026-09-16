@@ -1,4 +1,6 @@
 import { TOKEN_COLORS } from '@/data/vaults';
+import type { ChainId } from '@/data/chains';
+import { ChainLogo } from './ChainLogo';
 import { cx } from '@/lib/format';
 
 export function TokenIcon({ symbol, size = 22, className }: { symbol: string; size?: number; className?: string }) {
@@ -15,11 +17,18 @@ export function TokenIcon({ symbol, size = 22, className }: { symbol: string; si
   );
 }
 
-export function TokenPair({ a, b, size = 22 }: { a: string; b: string; size?: number }) {
+export function TokenPair({ a, b, size = 22, chain }: { a: string; b: string; size?: number; chain?: ChainId }) {
   return (
-    <span className="inline-flex items-center" style={{ width: size * 1.7 }}>
+    <span className="relative inline-flex items-center shrink-0" style={{ width: size * 1.7, height: size }}>
       <TokenIcon symbol={a} size={size} className="relative z-10" />
       <TokenIcon symbol={b} size={size} className="-ml-2" />
+      {chain && (
+        <ChainLogo
+          chain={chain}
+          size={Math.round(size * 0.6)}
+          className="absolute -bottom-1 -right-1 z-20 ring-2 ring-white"
+        />
+      )}
     </span>
   );
 }

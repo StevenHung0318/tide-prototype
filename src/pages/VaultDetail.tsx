@@ -6,6 +6,8 @@ import * as m from '@/lib/math';
 import { useStore } from '@/store/useStore';
 import { useMarketStatus, useVaultApr } from '@/store/selectors';
 import { TokenPair } from '@/components/ui/TokenIcon';
+import { ChainLogo } from '@/components/ui/ChainLogo';
+import { CHAINS } from '@/data/chains';
 import { Stat, StatRow } from '@/components/ui/Stat';
 import { PriceRange } from '@/components/vault/PriceRange';
 import { AprBreakdown } from '@/components/vault/AprBreakdown';
@@ -46,8 +48,12 @@ function VaultView({ vaultId, market }: { vaultId: string; market: 'open' | 'clo
     <div className="space-y-6">
       <header className="flex flex-wrap items-center gap-3">
         <Link to="/" className="text-xs text-ink-3 hover:text-ink-2 mr-1">← Earn</Link>
-        <TokenPair a={v.token0} b={v.token1} size={28} />
+        <TokenPair a={v.token0} b={v.token1} size={28} chain={v.chain} />
         <h1 className="display text-2xl font-semibold">{vaultName(v)}</h1>
+        <span className="inline-flex items-center gap-1.5 h-7 pl-1.5 pr-2.5 rounded-full bg-panel border border-line text-xs text-ink-2">
+          <ChainLogo chain={v.chain} size={16} />
+          {CHAINS[v.chain].name}
+        </span>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">

@@ -67,7 +67,7 @@ export function Analytics() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="display text-2xl font-semibold">Protocol analytics</h1>
-            <p className="text-sm text-ink-2 mt-1">Poolmigo vaults on Robinhood Chain.</p>
+            <p className="text-sm text-ink-2 mt-1">Poolmigo vaults across Ethereum, Robinhood Chain and Arc.</p>
           </div>
           <Segmented<Window> size="sm" value={win} onChange={setWin} options={[{ value: 'week', label: 'This week' }, { value: 'all', label: '8 weeks' }]} />
         </div>

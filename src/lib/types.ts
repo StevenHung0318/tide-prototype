@@ -1,3 +1,5 @@
+import type { ChainId } from '@/data/chains';
+
 export type Tier = 'Core' | 'Turbo' | 'Degen';
 
 export interface Vault {
@@ -5,6 +7,7 @@ export interface Vault {
   token0: string;
   token1: string;
   receiptSymbol: string;
+  chain: ChainId;
   tier: Tier;
   tvl: number;
   feeApr7d: number;

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { VAULTS, vaultName } from '@/data/vaults';
+import { CHAINS } from '@/data/chains';
 import * as m from '@/lib/math';
 import { cx, fmtPct, fmtUsd } from '@/lib/format';
 import type { Vault } from '@/lib/types';
@@ -32,7 +33,7 @@ export function VaultSelect({ open, onClose, onSelect, selectedId }: Props) {
   const rows = useMemo(
     () =>
       VAULTS.map((v) => ({ v, tvl: m.effectiveTvl(v, tvlDelta) }))
-        .filter(({ v }) => vaultName(v).toLowerCase().replace(/\s/g, '').includes(q.toLowerCase().replace(/\s/g, '')))
+        .filter(({ v }) => `${vaultName(v)} ${CHAINS[v.chain].name}`.toLowerCase().replace(/\s/g, '').includes(q.toLowerCase().replace(/\s/g, '')))
         .sort((a, b) => b.tvl - a.tvl),
     [q, tvlDelta],
   );
@@ -65,10 +66,10 @@ export function VaultSelect({ open, onClose, onSelect, selectedId }: Props) {
                   onClick={() => { onSelect(v); onClose(); }}
                   className={cx('w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-panel-2 transition-colors', selected && 'bg-panel-2/70', v.tier === 'Degen' && 'bg-amber/[0.04]')}
                 >
-                  <TokenPair a={v.token0} b={v.token1} size={26} />
+                  <TokenPair a={v.token0} b={v.token1} size={26} chain={v.chain} />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-ink">{vaultName(v)}</div>
-                    <div className="text-xs text-ink-3 num">{fmtUsd(tvl)} TVL{v.tier === 'Degen' ? ' · High risk' : ''}</div>
+                    <div className="text-xs text-ink-3 num">{CHAINS[v.chain].name} · {fmtUsd(tvl)} TVL{v.tier === 'Degen' ? ' · High risk' : ''}</div>
                   </div>
                   <div className="display num text-md font-semibold text-ink">{fmtPct(apr)}</div>
                 </button>
