@@ -6,7 +6,7 @@ export function ChainLogo({ chain, size = 16, className }: { chain: ChainId; siz
   const c = CHAINS[chain];
   return (
     <span
-      className={cx('inline-flex items-center justify-center rounded-full shrink-0', className)}
+      className={cx('inline-flex items-center justify-center rounded-[28%] shrink-0', className)}
       style={{ width: size, height: size, background: c.color }}
       title={c.name}
       aria-label={c.name}
@@ -23,7 +23,7 @@ export function ChainLogo({ chain, size = 16, className }: { chain: ChainId; siz
       )}
       {chain === 'robinhood' && (
         <svg viewBox="0 0 16 16" width={size * 0.7} height={size * 0.7} fill="none" aria-hidden>
-          <path d="M11.5 2.5c-3 .2-5.2 2-6.4 4.6C4.4 8.6 4 10.4 4 13.5c1-2.4 2-4 3.4-5.1-.4 1.6-.3 3 .2 4.3 1.4-1.8 2.3-3.9 2.6-6.4.8-1.1 1.3-2.4 1.3-3.8Z" fill="#fff" />
+          <path d="M11.5 2.5c-3 .2-5.2 2-6.4 4.6C4.4 8.6 4 10.4 4 13.5c1-2.4 2-4 3.4-5.1-.4 1.6-.3 3 .2 4.3 1.4-1.8 2.3-3.9 2.6-6.4.8-1.1 1.3-2.4 1.3-3.8Z" fill="#1A1613" />
         </svg>
       )}
       {chain === 'arc' && (
