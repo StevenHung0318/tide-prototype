@@ -26,7 +26,7 @@ export function Tooltip({ content, children, side = 'top', align = 'center', cla
         <span
           role="tooltip"
           className={cx(
-            'absolute z-40 rounded-md bg-ink text-deep shadow-pop px-2.5 py-1.5 text-xs leading-snug animate-fade-in',
+            'absolute z-40 rounded-md bg-ink text-deep px-2.5 py-1.5 text-xs leading-snug animate-fade-in shadow-lg',
             wide ? 'w-72' : 'w-max max-w-[260px]',
             side === 'top' ? 'bottom-full mb-2' : 'top-full mt-2',
             align === 'center' && 'left-1/2 -translate-x-1/2',

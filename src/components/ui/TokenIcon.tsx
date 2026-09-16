@@ -9,7 +9,7 @@ export function TokenIcon({ symbol, size = 22, className }: { symbol: string; si
   return (
     <span
       className={cx('inline-flex items-center justify-center rounded-full font-display font-semibold text-white shrink-0', className)}
-      style={{ width: size, height: size, background: color, fontSize: size * 0.48, boxShadow: '0 0 0 2px #FFFFFF' }}
+      style={{ width: size, height: size, background: color, fontSize: size * 0.48, boxShadow: '0 0 0 2px rgb(var(--c-panel))' }}
       title={symbol}
     >
       {letter}
@@ -26,7 +26,7 @@ export function TokenPair({ a, b, size = 22, chain }: { a: string; b: string; si
         <ChainLogo
           chain={chain}
           size={Math.round(size * 0.6)}
-          className="absolute -bottom-1 -right-1 z-20 ring-2 ring-white"
+          className="absolute -bottom-1 -right-1 z-20 ring-2 ring-panel"
         />
       )}
     </span>

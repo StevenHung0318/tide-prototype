@@ -5,10 +5,12 @@ import { navSeries } from '@/lib/series';
 import { Card } from '@/components/ui/Card';
 import { Segmented } from '@/components/ui/Tabs';
 import { fmtPctSigned } from '@/lib/format';
+import { usePalette } from '@/lib/theme';
 
 type Window = '30D' | '7D';
 
 export function NavChart({ vault: v }: { vault: Vault }) {
+  const pal = usePalette();
   const [win, setWin] = useState<Window>('30D');
   const all = useMemo(() => navSeries(v.id, v.pricePerShare, v.benchmarkLead), [v]);
   const data = win === '30D' ? all : all.slice(-7);
@@ -36,25 +38,25 @@ export function NavChart({ vault: v }: { vault: Vault }) {
       <div className="h-56">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-            <CartesianGrid stroke="#EDE7DC" strokeDasharray="2 4" vertical={false} />
+            <CartesianGrid stroke={pal.grid} strokeDasharray="2 4" vertical={false} />
             <XAxis
               dataKey="date"
-              tick={{ fill: '#8F8981', fontSize: 11 }}
+              tick={{ fill: pal.ink3, fontSize: 11 }}
               tickLine={false}
-              axisLine={{ stroke: '#DDD9D1' }}
+              axisLine={{ stroke: pal.line }}
               tickFormatter={(d: string) => d.slice(5).replace('-', '/')}
               minTickGap={28}
             />
             <YAxis
               domain={[yMin - pad, yMax + pad]}
-              tick={{ fill: '#8F8981', fontSize: 11 }}
+              tick={{ fill: pal.ink3, fontSize: 11 }}
               tickLine={false}
               axisLine={false}
               width={52}
               tickFormatter={(n: number) => n.toFixed(3)}
             />
             <RTooltip
-              cursor={{ stroke: '#C9C3B9' }}
+              cursor={{ stroke: pal.line }}
               content={({ active, payload, label }) => {
                 if (!active || !payload?.length) return null;
                 const p = payload[0].payload as { tdlp: number };
@@ -69,7 +71,7 @@ export function NavChart({ vault: v }: { vault: Vault }) {
                 );
               }}
             />
-            <Line type="monotone" dataKey="tdlp" stroke="#244742" strokeWidth={2} dot={false} isAnimationActive={false} />
+            <Line type="monotone" dataKey="tdlp" stroke={pal.aqua} strokeWidth={2} dot={false} isAnimationActive={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>

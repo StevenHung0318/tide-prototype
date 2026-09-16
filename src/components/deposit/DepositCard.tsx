@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Vault } from '@/lib/types';
 import { TOKEN_PRICES, vaultName } from '@/data/vaults';
@@ -89,23 +89,13 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-/** Amount box with an inline token menu — the one thing the user touches. */
+/** Amount box — the one thing the user touches. Token is shown, not chosen here. */
 function AmountBox({
-  value, onChange, token, tokens, onToken, balance, connected, usd, autoFocus, error,
+  value, onChange, tokenLabel, tokenIcon, balance, connected, usd, autoFocus, error,
 }: {
-  value: string; onChange: (s: string) => void; token: string; tokens: Array<{ id: string; label: string; balance?: number }>; onToken: (id: string) => void;
+  value: string; onChange: (s: string) => void; tokenLabel: string; tokenIcon?: React.ReactNode;
   balance?: number; connected: boolean; usd?: number; autoFocus?: boolean; error?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-  const menu = tokens.length > 1;
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => ref.current && !ref.current.contains(e.target as Node) && setOpen(false);
-    document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, [open]);
-  const current = tokens.find((t) => t.id === token);
   return (
     <div className={cx('rounded-md bg-deep border px-3 pt-2.5 pb-2', error ? 'border-down/60' : 'border-line focus-within:border-line-2')}>
       <div className="flex items-center gap-2">
@@ -120,24 +110,10 @@ function AmountBox({
           placeholder="0"
           className="flex-1 min-w-0 bg-transparent display text-3xl num text-ink placeholder:text-ink-3 outline-none"
         />
-        <div className="relative" ref={ref}>
-          <button onClick={() => menu && setOpen(!open)} className={cx('h-9 pl-2 pr-2.5 rounded-full bg-panel-2 border border-line inline-flex items-center gap-1.5 text-sm font-medium', menu && 'hover:border-line-2')}>
-            {token !== DUAL && <TokenIcon symbol={token} size={20} />}
-            {current?.label ?? token}
-            {menu && <Chevron />}
-          </button>
-          {open && (
-            <div className="absolute right-0 top-full mt-1 z-30 w-56 bg-panel-2 border border-line-2 rounded-md shadow-pop py-1 animate-fade-in">
-              {tokens.map((t) => (
-                <button key={t.id} onClick={() => { onToken(t.id); setOpen(false); }} className={cx('w-full flex items-center gap-2 px-3 h-10 text-sm hover:bg-panel text-left', t.id === token && 'text-aqua')}>
-                  {t.id !== DUAL && <TokenIcon symbol={t.id} size={18} />}
-                  <span className="flex-1">{t.label}</span>
-                  {connected && t.balance !== undefined && <span className="text-xs text-ink-3 num">{fmtToken(t.balance)}</span>}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <span className="h-9 pl-2 pr-3 rounded-full bg-panel-2 border border-line inline-flex items-center gap-1.5 text-sm font-medium">
+          {tokenIcon}
+          {tokenLabel}
+        </span>
       </div>
       <div className="flex items-center justify-between mt-1 text-xs num">
         <span className="text-ink-3">{usd !== undefined && usd > 0 ? `≈ ${fmtUsd(usd, { compact: false, cents: true })}` : ''}</span>
@@ -148,6 +124,28 @@ function AmountBox({
           </span>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Visible choice of what to pay with — single tokens or both, each with its logo. */
+function PayWith({ options, value, onChange }: { options: Array<{ id: string; label: string; icon: React.ReactNode }>; value: string; onChange: (id: string) => void }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((o) => (
+        <button
+          key={o.id}
+          onClick={() => onChange(o.id)}
+          aria-pressed={value === o.id}
+          className={cx(
+            'h-9 pl-1.5 pr-3 rounded-full border text-sm font-medium inline-flex items-center gap-1.5 transition-colors',
+            value === o.id ? 'border-aqua bg-aqua/10 text-ink' : 'border-line bg-panel text-ink-2 hover:border-line-2',
+          )}
+        >
+          {o.icon}
+          {o.label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -176,11 +174,10 @@ function DepositForm({ vault: v, onPick, initialAmount }: { vault: Vault; onPick
   const [ack, setAck] = useState(false);
 
   const bal = (t: string) => balances[t] ?? 0;
-  const tokens = useMemo(() => {
-    const singles = Array.from(new Set(['USDC', v.token0, v.token1])).map((t) => ({ id: t, label: t, balance: bal(t) }));
-    return [...singles, { id: DUAL, label: `${v.token0} + ${v.token1}` }];
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [v, balances]);
+  const payOptions = useMemo(() => {
+    const singles = Array.from(new Set(['USDC', v.token0, v.token1])).map((t) => ({ id: t, label: t, icon: <TokenIcon symbol={t} size={22} /> }));
+    return [...singles, { id: DUAL, label: `${v.token0} + ${v.token1}`, icon: <TokenPair a={v.token0} b={v.token1} size={22} /> }];
+  }, [v]);
   const isDual = asset === DUAL;
   const amt = Number(amount) || 0;
   const amt1 = Number(amount1) || 0;
@@ -230,14 +227,18 @@ function DepositForm({ vault: v, onPick, initialAmount }: { vault: Vault; onPick
         <VaultPill vault={v} onPick={onPick} apr={apr} />
       </Field>
 
+      <Field label="Pay with">
+        <PayWith options={payOptions} value={asset} onChange={(id) => { setAsset(id); setAmount(''); setAmount1(''); }} />
+      </Field>
+
       <Field label="Amount">
         {isDual ? (
           <div className="space-y-2">
-            <AmountBox value={amount} onChange={setAmount} token={v.token0} tokens={[{ id: v.token0, label: v.token0 }]} onToken={() => {}} balance={bal(v.token0)} connected={connected} usd={amt * TOKEN_PRICES[v.token0]} autoFocus error={connected && amt > bal(v.token0)} />
-            <AmountBox value={amount1} onChange={setAmount1} token={v.token1} tokens={tokens.filter((t) => t.id === v.token1 || t.id === DUAL).map((t) => (t.id === DUAL ? { ...t, label: 'Single asset instead' } : t))} onToken={(id) => id === DUAL && setAsset('USDC')} balance={bal(v.token1)} connected={connected} usd={amt1 * TOKEN_PRICES[v.token1]} error={connected && amt1 > bal(v.token1)} />
+            <AmountBox value={amount} onChange={setAmount} tokenLabel={v.token0} tokenIcon={<TokenIcon symbol={v.token0} size={20} />} balance={bal(v.token0)} connected={connected} usd={amt * TOKEN_PRICES[v.token0]} autoFocus error={connected && amt > bal(v.token0)} />
+            <AmountBox value={amount1} onChange={setAmount1} tokenLabel={v.token1} tokenIcon={<TokenIcon symbol={v.token1} size={20} />} balance={bal(v.token1)} connected={connected} usd={amt1 * TOKEN_PRICES[v.token1]} error={connected && amt1 > bal(v.token1)} />
           </div>
         ) : (
-          <AmountBox value={amount} onChange={setAmount} token={asset} tokens={tokens} onToken={(id) => { setAsset(id); setAmount(''); setAmount1(''); }} balance={bal(asset)} connected={connected} usd={preview?.inputUsd} autoFocus error={insufficient} />
+          <AmountBox value={amount} onChange={setAmount} tokenLabel={asset} tokenIcon={<TokenIcon symbol={asset} size={20} />} balance={bal(asset)} connected={connected} usd={preview?.inputUsd} autoFocus error={insufficient} />
         )}
       </Field>
 
@@ -352,7 +353,7 @@ function WithdrawForm({ vault: v, onPick }: { vault: Vault; onPick: () => void }
         <VaultPill vault={v} onPick={onPick} apr={b.totalApr} />
       </Field>
       <Field label="Amount">
-        <AmountBox value={amount} onChange={setAmount} token={v.receiptSymbol} tokens={[{ id: v.receiptSymbol, label: v.receiptSymbol }]} onToken={() => {}} balance={connected ? total : undefined} connected={connected} usd={amt * v.pricePerShare} error={insufficient} />
+        <AmountBox value={amount} onChange={setAmount} tokenLabel={v.receiptSymbol} tokenIcon={<TokenPair a={v.token0} b={v.token1} size={18} />} balance={connected ? total : undefined} connected={connected} usd={amt * v.pricePerShare} error={insufficient} />
       </Field>
       <Field label="Receive">
         <div className="rounded-md bg-deep border border-line px-3 py-2.5 num">

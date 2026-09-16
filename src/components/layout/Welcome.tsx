@@ -8,9 +8,7 @@ export function Welcome() {
   return (
     <section className="bg-panel border border-line rounded-lg overflow-hidden">
       <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 px-6 md:px-10 py-6">
-        <div className="rounded-lg bg-deep p-3 order-last md:order-first shrink-0">
-          <img src={`${import.meta.env.BASE_URL}brand/mascot-hero.png`} alt="" className="h-32 md:h-40 w-auto select-none" draggable={false} />
-        </div>
+        <img src={`${import.meta.env.BASE_URL}brand/mascot-hero.png`} alt="" className="h-36 md:h-44 w-auto select-none order-last md:order-first shrink-0" draggable={false} />
         <div className="flex-1 text-center md:text-left">
           <h1 className="display text-3xl md:text-4xl text-ink leading-tight">Meet your liquidity sidekick.</h1>
           <p className="text-md text-ink-2 mt-2">Automated liquidity vaults for less manual LP management.</p>

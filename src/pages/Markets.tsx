@@ -17,12 +17,15 @@ import { AprBreakdown } from '@/components/vault/AprBreakdown';
 import { DepositModal } from '@/components/deposit/DepositModal';
 import { ClaimModal } from '@/components/rewards/ClaimModal';
 import { Welcome } from '@/components/layout/Welcome';
+import { Sidekick } from '@/components/layout/Sidekick';
 
 
 export function Markets() {
   const tvlDelta = useStore((s) => s.user.tvlDelta);
   const d = useUserDerived();
   const [q, setQ] = useState('');
+  const [sort, setSort] = useState<{ key: 'tvl' | 'apr'; dir: 'asc' | 'desc' }>({ key: 'tvl', dir: 'desc' });
+  const toggleSort = (key: 'tvl' | 'apr') => setSort((s) => (s.key === key ? { key, dir: s.dir === 'desc' ? 'asc' : 'desc' } : { key, dir: 'desc' }));
   const [params, setParams] = useSearchParams();
   const depositVault = VAULT_BY_ID[params.get('deposit') ?? ''] ?? null;
   const claimOpen = params.get('claim') === '1';
@@ -40,9 +43,9 @@ export function Markets() {
   const rows = useMemo(
     () =>
       VAULTS.filter((v) => `${vaultName(v)} ${CHAINS[v.chain].name}`.toLowerCase().replace(/\s/g, '').includes(q.toLowerCase().replace(/\s/g, '')))
-        .map((v) => ({ v, tvl: m.effectiveTvl(v, tvlDelta) }))
-        .sort((a, b) => b.tvl - a.tvl),
-    [q, tvlDelta],
+        .map((v) => ({ v, tvl: m.effectiveTvl(v, tvlDelta), apr: m.aprBreakdown(v, m.effectiveTvl(v, tvlDelta)).totalApr }))
+        .sort((a, b) => (sort.dir === 'desc' ? b[sort.key] - a[sort.key] : a[sort.key] - b[sort.key])),
+    [q, tvlDelta, sort],
   );
   const showMine = d.connected && d.hasPositions;
   const positions = useStore((s) => s.user.positions);
@@ -54,7 +57,7 @@ export function Markets() {
 
   return (
     <div className="space-y-6">
-      {!d.connected && <Welcome />}
+      {d.connected ? <Sidekick onClaim={() => setParams({ claim: '1' })} /> : <Welcome />}
       {showMine ? (
         <StatRow cols={3}>
           <Stat label="Your deposits" value={fmtUsd(d.depositsUsd, { compact: false })} />
@@ -101,8 +104,8 @@ export function Markets() {
           <thead>
             <tr className="text-xs text-ink-3 border-b border-line">
               <th className="text-left font-medium px-4 h-10">Pool</th>
-              <th className="text-right font-medium px-3 h-10 w-[18%]">TVL</th>
-              <th className="text-right font-medium px-3 h-10 w-[18%]">APR</th>
+              <th className="text-right font-medium px-3 h-10 w-[18%]"><SortHead label="TVL" active={sort.key === 'tvl'} dir={sort.dir} onClick={() => toggleSort('tvl')} /></th>
+              <th className="text-right font-medium px-3 h-10 w-[18%]"><SortHead label="APR" active={sort.key === 'apr'} dir={sort.dir} onClick={() => toggleSort('apr')} /></th>
               {showMine && <th className="text-right font-medium px-3 h-10 w-[18%]">My deposit</th>}
               <th className="px-4 h-10 w-[14%]" />
             </tr>
@@ -148,7 +151,10 @@ function VaultRow({ vault: v, tvl, showMine, onDeposit }: { vault: Vault; tvl: n
           <TokenPair a={v.token0} b={v.token1} size={26} chain={v.chain} />
           <div>
             <div className="font-medium text-ink">{vaultName(v)}</div>
-            <div className="text-2xs text-ink-3">{CHAINS[v.chain].name}</div>
+            <div className="text-2xs text-ink-3">
+              {CHAINS[v.chain].name}
+              {v.tier === 'Degen' && <span className="text-amber"> · High risk</span>}
+            </div>
           </div>
         </div>
       </td>
@@ -181,10 +187,22 @@ function VaultRow({ vault: v, tvl, showMine, onDeposit }: { vault: Vault; tvl: n
         </td>
       )}
       <td className="px-4 py-3.5 text-right">
-        <Button size="sm" variant={v.tier === 'Degen' ? 'secondary' : 'primary'} onClick={(e) => { e.stopPropagation(); onDeposit(); }}>
+        <Button size="sm" onClick={(e) => { e.stopPropagation(); onDeposit(); }}>
           Deposit
         </Button>
       </td>
     </tr>
+  );
+}
+
+function SortHead({ label, active, dir, onClick }: { label: string; active: boolean; dir: 'asc' | 'desc'; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className={cx('inline-flex items-center gap-1 hover:text-ink', active && 'text-ink')} aria-sort={active ? (dir === 'desc' ? 'descending' : 'ascending') : 'none'}>
+      {label}
+      <svg viewBox="0 0 10 12" className={cx('h-3 w-2.5', active ? 'text-ink' : 'text-ink-3/60')} fill="currentColor" aria-hidden>
+        <path d="M5 1 8.5 5h-7L5 1Z" opacity={active && dir === 'asc' ? 1 : 0.35} />
+        <path d="M5 11 1.5 7h7L5 11Z" opacity={active && dir === 'desc' ? 1 : 0.35} />
+      </svg>
+    </button>
   );
 }
