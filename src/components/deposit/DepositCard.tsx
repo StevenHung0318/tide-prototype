@@ -62,7 +62,7 @@ export function DepositCard({ vault: v, onVaultChange, initialAmount, showVaultL
 function VaultPill({ vault: v, onPick, apr }: { vault: Vault; onPick: () => void; apr: number }) {
   return (
     <button onClick={onPick} className="w-full flex items-center gap-3 rounded-md bg-deep border border-line hover:border-line-2 px-3 h-14 text-left transition-colors">
-      <TokenPair a={v.token0} b={v.token1} size={26} />
+      <TokenPair a={v.token0} b={v.token1} size={26} chain={v.chain} />
       <span className="flex-1 min-w-0">
         <span className="block text-sm font-medium text-ink">{vaultName(v)}</span>
         <span className="block text-xs num text-ink-2">{fmtPct(apr)} APR</span>

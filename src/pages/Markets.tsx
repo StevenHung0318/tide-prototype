@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { VAULTS, VAULT_BY_ID, vaultName } from '@/data/vaults';
+import { CHAINS } from '@/data/chains';
 import * as m from '@/lib/math';
 import { cx, fmtPct, fmtToken, fmtUsd } from '@/lib/format';
 import { CONSTANTS } from '@/lib/constants';
@@ -38,7 +39,7 @@ export function Markets() {
         : `${fmtToken(lockedTide, 0)} PMG locked · next unlock in ${Math.max(0, Math.ceil(((nextUnlock ?? 0) - Date.now()) / 86_400_000))}d`;
   const rows = useMemo(
     () =>
-      VAULTS.filter((v) => vaultName(v).toLowerCase().replace(/\s/g, '').includes(q.toLowerCase().replace(/\s/g, '')))
+      VAULTS.filter((v) => `${vaultName(v)} ${CHAINS[v.chain].name}`.toLowerCase().replace(/\s/g, '').includes(q.toLowerCase().replace(/\s/g, '')))
         .map((v) => ({ v, tvl: m.effectiveTvl(v, tvlDelta) }))
         .sort((a, b) => b.tvl - a.tvl),
     [q, tvlDelta],
@@ -144,8 +145,11 @@ function VaultRow({ vault: v, tvl, showMine, onDeposit }: { vault: Vault; tvl: n
     >
       <td className="px-4 py-3.5">
         <div className="flex items-center gap-3">
-          <TokenPair a={v.token0} b={v.token1} />
-          <span className="font-medium text-ink">{vaultName(v)}</span>
+          <TokenPair a={v.token0} b={v.token1} size={26} chain={v.chain} />
+          <div>
+            <div className="font-medium text-ink">{vaultName(v)}</div>
+            <div className="text-2xs text-ink-3">{CHAINS[v.chain].name}</div>
+          </div>
         </div>
       </td>
       <td className="px-3 py-3.5 text-right text-ink">{fmtUsd(tvl)}</td>
