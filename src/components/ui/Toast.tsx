@@ -11,7 +11,7 @@ export function ToastHost() {
           key={t.id}
           role="status"
           className={cx(
-            'animate-fade-in bg-panel-2 border rounded-md shadow-pop px-3.5 py-3 flex items-start gap-3',
+            'animate-fade-in bg-panel border rounded-lg shadow-pop px-3.5 py-3 flex items-start gap-3',
             t.tone === 'tide' ? 'border-tide/50' : t.tone === 'up' ? 'border-up/50' : t.tone === 'amber' ? 'border-amber/50' : 'border-aqua/50',
           )}
         >

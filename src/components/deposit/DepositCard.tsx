@@ -29,7 +29,7 @@ export function DepositCard({ vault: v, onVaultChange, initialAmount, showVaultL
 
   return (
     <div className="w-full max-w-[440px] mx-auto">
-      <div className="bg-panel border border-line rounded-lg p-4 space-y-3">
+      <div className="bg-panel border border-line rounded-lg p-4 space-y-3 shadow-pop">
         <div className="flex items-center justify-between">
           <div className="inline-flex rounded bg-deep p-0.5 gap-0.5">
             {(['deposit', 'withdraw'] as Tab[]).map((t) => (
@@ -206,7 +206,7 @@ function DepositForm({ vault: v, onPick, initialAmount }: { vault: Vault; onPick
     setDone(true);
     setTimeout(() => setDone(false), 2200);
     const what = isDual ? `${fmtToken(amt)} ${v.token0} + ${fmtToken(amt1)} ${v.token1}` : `${fmtToken(amt)} ${asset}`;
-    pushToast({ title: `Deposited ${what}`, detail: `Now earning ${fmtPct(apr)} APR in ${vaultName(v)}`, tone: 'tide' });
+    pushToast({ title: 'Deposit confirmed', detail: `${what} into ${vaultName(v)} · earning ${fmtPct(apr)} APR`, tone: 'up' });
   };
 
   const onSubmit = () => {
@@ -280,6 +280,7 @@ function DepositForm({ vault: v, onPick, initialAmount }: { vault: Vault; onPick
             <Row k="Lock-up" v="None · redeem anytime" />
           </dl>
         )}
+        <p className="mt-2 text-2xs text-ink-3 leading-relaxed">LP positions can lose value and may underperform holding the assets. Review the vault strategy, fees and risks before depositing.</p>
       </div>
 
       <Modal
@@ -295,7 +296,7 @@ function DepositForm({ vault: v, onPick, initialAmount }: { vault: Vault; onPick
       >
         <p>Degen vaults run narrow, high-frequency ranges on volatile pairs. Higher fees, higher impermanent loss risk. Net value can underperform holding.</p>
         <label className="mt-4 flex items-start gap-2.5 cursor-pointer text-ink">
-          <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} className="mt-0.5 accent-[#F5B14C]" />
+          <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} className="mt-0.5 accent-[#244742]" />
           <span className="text-sm">I understand this vault can lose value versus holding the underlying tokens.</span>
         </label>
       </Modal>
@@ -333,7 +334,7 @@ function WithdrawForm({ vault: v, onPick }: { vault: Vault; onPick: () => void }
     setAmount('');
     setDone(true);
     setTimeout(() => setDone(false), 2200);
-    pushToast({ title: `Withdrew ${fmtToken(amt, 1)} ${v.receiptSymbol}`, detail: `Received ${preview.outputs.map((o) => `${fmtToken(o.amount)} ${o.token}`).join(' + ')}` });
+    pushToast({ title: 'Withdrawal confirmed', detail: `Received ${preview.outputs.map((o) => `${fmtToken(o.amount)} ${o.token}`).join(' + ')}`, tone: 'up' });
   };
 
   let cta = { label: 'Withdraw', disabled: true };

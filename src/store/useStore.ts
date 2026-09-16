@@ -150,7 +150,7 @@ export const useStore = create<AppState>()(
             user: record(
               { ...s.user, positions: { ...s.user.positions, [vaultId]: { ...p, staked: p.staked + p.unstaked, unstaked: 0 } } },
               'stake',
-              `Staked ${VAULT_BY_ID[vaultId]?.receiptSymbol ?? 'tdLP'}`,
+              `Staked ${VAULT_BY_ID[vaultId]?.receiptSymbol ?? 'pmLP'}`,
             ),
           };
         }),

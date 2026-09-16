@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/Button';
 import { AprBreakdown } from '@/components/vault/AprBreakdown';
 import { DepositModal } from '@/components/deposit/DepositModal';
 import { ClaimModal } from '@/components/rewards/ClaimModal';
+import { Welcome } from '@/components/layout/Welcome';
 
 
 export function Markets() {
@@ -52,6 +53,7 @@ export function Markets() {
 
   return (
     <div className="space-y-6">
+      {!d.connected && <Welcome />}
       {showMine ? (
         <StatRow cols={3}>
           <Stat label="Your deposits" value={fmtUsd(d.depositsUsd, { compact: false })} />

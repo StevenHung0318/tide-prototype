@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { VAULTS, vaultName } from '@/data/vaults';
 import * as m from '@/lib/math';
 import { cx, fmtPct, fmtUsd } from '@/lib/format';
@@ -37,10 +38,10 @@ export function VaultSelect({ open, onClose, onSelect, selectedId }: Props) {
   );
 
   if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-start md:items-center justify-center p-4" role="dialog" aria-modal>
-      <div className="absolute inset-0 bg-deep/80" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-panel border border-line-2 rounded-lg shadow-pop animate-fade-in overflow-hidden">
+  return createPortal(
+    <div className="fixed inset-0 z-[60] flex items-start md:items-center justify-center p-4" role="dialog" aria-modal>
+      <div className="absolute inset-0 bg-ink/40" onClick={onClose} />
+      <div className="relative w-full max-w-md bg-panel border border-line rounded-lg shadow-pop animate-fade-in overflow-hidden">
         <div className="px-4 pt-4 pb-3 border-b border-line">
           <div className="flex items-center justify-between mb-3">
             <h2 className="display text-md font-semibold">Select a vault</h2>
@@ -77,6 +78,7 @@ export function VaultSelect({ open, onClose, onSelect, selectedId }: Props) {
           {rows.length === 0 && <li className="px-4 py-8 text-center text-sm text-ink-3">No vaults match.</li>}
         </ul>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

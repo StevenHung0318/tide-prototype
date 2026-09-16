@@ -21,7 +21,7 @@ export function NavChart({ vault: v }: { vault: Vault }) {
 
   return (
     <Card
-      title="tdLP price"
+      title="Vault token price"
       action={
         <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1">
           <div className="flex flex-wrap items-center gap-3 text-xs num">
@@ -36,30 +36,30 @@ export function NavChart({ vault: v }: { vault: Vault }) {
       <div className="h-56">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-            <CartesianGrid stroke="#232E44" strokeDasharray="2 4" vertical={false} />
+            <CartesianGrid stroke="#EDE7DC" strokeDasharray="2 4" vertical={false} />
             <XAxis
               dataKey="date"
-              tick={{ fill: '#6B7690', fontSize: 11 }}
+              tick={{ fill: '#8F8981', fontSize: 11 }}
               tickLine={false}
-              axisLine={{ stroke: '#232E44' }}
+              axisLine={{ stroke: '#DDD9D1' }}
               tickFormatter={(d: string) => d.slice(5).replace('-', '/')}
               minTickGap={28}
             />
             <YAxis
               domain={[yMin - pad, yMax + pad]}
-              tick={{ fill: '#6B7690', fontSize: 11 }}
+              tick={{ fill: '#8F8981', fontSize: 11 }}
               tickLine={false}
               axisLine={false}
               width={52}
               tickFormatter={(n: number) => n.toFixed(3)}
             />
             <RTooltip
-              cursor={{ stroke: '#2E3B55' }}
+              cursor={{ stroke: '#C9C3B9' }}
               content={({ active, payload, label }) => {
                 if (!active || !payload?.length) return null;
                 const p = payload[0].payload as { tdlp: number };
                 return (
-                  <div className="bg-panel-2 border border-line-2 rounded shadow-pop px-2.5 py-2 text-xs num">
+                  <div className="bg-panel border border-line rounded-md shadow-pop px-2.5 py-2 text-xs num">
                     <div className="text-ink-3 mb-1">{label}</div>
                     <div className="flex justify-between gap-4">
                       <span className="text-aqua">{v.receiptSymbol}</span>
@@ -69,7 +69,7 @@ export function NavChart({ vault: v }: { vault: Vault }) {
                 );
               }}
             />
-            <Line type="monotone" dataKey="tdlp" stroke="#39D0C4" strokeWidth={2} dot={false} isAnimationActive={false} />
+            <Line type="monotone" dataKey="tdlp" stroke="#244742" strokeWidth={2} dot={false} isAnimationActive={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>

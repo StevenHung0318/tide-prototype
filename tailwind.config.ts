@@ -1,6 +1,8 @@
 import type { Config } from 'tailwindcss';
 
-// Design tokens — single source of truth for colour/type (see docs/CLAUDE-CODE-PROMPT.md).
+// Design tokens — Poolmigo brand kit v1.0 (assets/brand-tokens.json).
+// Token *names* are kept from the original build so components need no churn;
+// only the values changed for the light, cream-based system.
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
@@ -10,31 +12,35 @@ export default {
       white: '#FFFFFF',
       black: '#000000',
       // Surfaces
-      deep: '#0E1420',
-      panel: '#161E2E',
-      'panel-2': '#1C2638',
-      line: '#232E44',
-      'line-2': '#2E3B55',
+      deep: '#FFF8EF', // cream — page background and inset fields
+      panel: '#FFFFFF', // cards
+      'panel-2': '#F6EFE4', // hover / raised surfaces
+      line: '#DDD9D1',
+      'line-2': '#C9C3B9',
       // Text
-      ink: '#E6EBF5',
-      'ink-2': '#A6B0C3',
-      'ink-3': '#6B7690',
-      // Semantic
-      aqua: '#39D0C4',
-      'aqua-dim': '#1F8F87',
-      up: '#4ADE80',
-      down: '#F87171',
-      amber: '#F5B14C',
-      tide: '#8B9CF7',
-      indigo: '#8B9CF7',
+      ink: '#302823',
+      'ink-2': '#625D57', // muted
+      'ink-3': '#8F8981', // quiet labels (derived from muted)
+      // Actions & status
+      aqua: '#244742', // deep teal — primary actions, in-range
+      'aqua-dim': '#3F6B65',
+      up: '#28614F', // success
+      down: '#A33832', // negative
+      amber: '#8B5A13', // warning
+      // Brand character colours (decorative)
+      apricot: '#F3A66E',
+      glass: '#7BB8B2',
+      // Token colour for TIDE-denominated numbers — apricot darkened for text contrast on cream/white
+      tide: '#9A5A22',
+      indigo: '#9A5A22',
     },
     fontFamily: {
-      display: ['Archivo', 'Inter', 'system-ui', 'sans-serif'],
-      sans: ['Inter', 'system-ui', 'sans-serif'],
+      display: ['Rubik', 'Arial', 'system-ui', 'sans-serif'],
+      sans: ['Rubik', 'Arial', 'system-ui', 'sans-serif'],
       mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
     },
     extend: {
-      borderRadius: { DEFAULT: '4px', md: '6px', lg: '8px' },
+      borderRadius: { DEFAULT: '8px', md: '12px', lg: '16px' },
       fontSize: {
         '2xs': ['11px', '14px'],
         xs: ['12px', '16px'],
@@ -48,7 +54,7 @@ export default {
         '4xl': ['38px', '44px'],
       },
       boxShadow: {
-        pop: '0 8px 24px rgba(0,0,0,0.45), 0 0 0 1px #232E44',
+        pop: '0 8px 24px rgba(48,40,35,0.12), 0 0 0 1px #DDD9D1',
       },
       keyframes: {
         'fade-in': { from: { opacity: '0', transform: 'translateY(4px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
